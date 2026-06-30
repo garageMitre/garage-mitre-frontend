@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -22,14 +23,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { ticketSchema, TicketSchemaType } from '@/schemas/ticket.schema';
-import { createTicketAction } from '@/actions/tickets/create-ticket.action';
 import { ticketPriceSchema, TicketPriceSchemaType } from '@/schemas/ticket-price.schema';
 import { createTicketPriceAction } from '@/actions/tickets/create-ticket-price.action';
+import { Hourglass, Loader2, Plus } from 'lucide-react';
 
 export function CreateTicketPriceWeekOrDayDialog() {
-  const [error, setError] = useState<string | undefined>('');
-  const [success, setSuccess] = useState<string | undefined>('');
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
 
@@ -43,42 +41,46 @@ export function CreateTicketPriceWeekOrDayDialog() {
   });
 
   const onSubmit = (values: TicketPriceSchemaType) => {
-    setError(undefined);
-    setSuccess(undefined);
-
-    startTransition(async() => {
-      const data = await createTicketPriceAction(values)
+    startTransition(async () => {
+      const data = await createTicketPriceAction(values);
       if (!data || data.error) {
-        // Verifica si data.error es un string o un objeto antes de acceder a 'message'
-        const errorMessage = typeof data.error === 'string' 
-          ? data.error // Si el error es solo un string, mostramos ese mensaje
-          : data.error.message; // Si el error es un objeto, accedemos a 'message'
-  
-        toast.error(errorMessage); // Mostramos el mensaje de error
+        const errorMessage = typeof data.error === 'string'
+          ? data.error
+          : data.error.message;
+        toast.error(errorMessage);
       } else {
-        toast.success('Precio ticket creado exitosamente');
+        toast.success('Precio de ticket creado exitosamente');
         form.reset();
         setOpen(false);
       }
     });
   };
 
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" onClick={() => setOpen(true)}>
-          Crear Precio Ticket
+        <Button size="sm" className="h-8 gap-1.5 rounded-md text-[12px] font-semibold">
+          <Plus className="size-3.5" />
+          Nuevo precio
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-full max-w-md sm:max-w-lg">
-        <DialogHeader className="items-center">
-          <DialogTitle>Crear Ticket</DialogTitle>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-md border border-gm-orange/40 bg-gm-orange/15 text-[#FF8458]">
+              <Hourglass className="size-4" />
+            </span>
+            <div>
+              <DialogTitle>Nuevo precio por abono</DialogTitle>
+              <DialogDescription className="mt-0.5">
+                Definí el precio por día o semana según vehículo.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Select para Vehicle Type */}
             <FormField
               control={form.control}
               name="ticketTimeType"
@@ -95,7 +97,7 @@ export function CreateTicketPriceWeekOrDayDialog() {
                         <SelectValue placeholder="Selecciona un tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="DIA">Dia/s</SelectItem>
+                        <SelectItem value="DIA">Día/s</SelectItem>
                         <SelectItem value="SEMANA">Semana/s</SelectItem>
                       </SelectContent>
                     </Select>
@@ -144,7 +146,8 @@ export function CreateTicketPriceWeekOrDayDialog() {
             />
 
             <Button className="w-full" type="submit" disabled={isPending}>
-              Crear Precio Ticket
+              {isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+              Crear precio
             </Button>
           </form>
         </Form>

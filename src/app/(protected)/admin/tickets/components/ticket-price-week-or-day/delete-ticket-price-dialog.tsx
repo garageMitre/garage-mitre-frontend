@@ -22,12 +22,10 @@ import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { Ticket } from '@/types/ticket.type';
-import { deleteTicketSchema, DeleteTicketSchemaType } from '@/schemas/ticket.schema';
-import { deleteTicketAction } from '@/actions/tickets/delete-ticket.action';
 import { ticketPrice } from '@/types/ticket-price';
 import { deleteTicketPriceSchema, DeleteTicketPriceSchemaType } from '@/schemas/ticket-price.schema';
 import { deleteTicketPriceAction } from '@/actions/tickets/delete-ticket-precio.action';
+import { Trash2 } from 'lucide-react';
 
 const DELETE_TICKET_TEXT = 'Eliminar ticket';
 
@@ -69,20 +67,28 @@ export function DeleteTicketPriceWeekOrDayDialog({ ticketPrice }: { ticketPrice:
         <DialogTrigger asChild>
           <Button
             variant="ghost"
-            className="w-full justify-start"
+            className="w-full justify-start gap-2 text-[#F08775] hover:text-[#F08775] hover:bg-destructive/15"
             size="sm"
             onClick={() => setOpen(true)}
           >
-            Eliminar
+            <Trash2 className="size-3.5" />
+            Eliminar precio
           </Button>
         </DialogTrigger>
 
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar Precio Ticket</DialogTitle>
-            <DialogDescription>
-              Ingrese {DELETE_TICKET_TEXT} para confirmar.
-            </DialogDescription>
+            <div className="flex items-center gap-3">
+              <span className="grid size-9 place-items-center rounded-md border border-destructive/40 bg-destructive/15 text-[#F08775]">
+                <Trash2 className="size-4" />
+              </span>
+              <div>
+                <DialogTitle>Eliminar precio de ticket</DialogTitle>
+                <DialogDescription className="mt-0.5">
+                  Ingresá {DELETE_TICKET_TEXT} para confirmar.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

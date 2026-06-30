@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import {
   DropdownMenu,
@@ -8,20 +9,22 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User } from '@/types/user.type';
 import { ColumnDef } from '@tanstack/react-table';
-import { BadgeCheckIcon, BadgeXIcon, MoreHorizontal } from 'lucide-react';
-import { UpdateTicketDialog } from '../update-ticket-dialog';
-import { Ticket } from '@/types/ticket.type';
-import { DeleteTicketDialog } from '../delete-ticket-dialog';
+import { MoreHorizontal } from 'lucide-react';
 import { ticketPrice } from '@/types/ticket-price';
 import { UpdateTicketPriceDialog } from './update-ticket-price-dialog';
 import { DeleteTicketPriceDialog } from './delete-ticket-price-dialog';
 
 const typeMap: Record<string, string> = {
-  DAY: 'DIA',
-  NIGHT: 'NOCHE',
+  DAY: 'Día',
+  NIGHT: 'Noche',
 };
+
+const ars = (n: number) =>
+  new Intl.NumberFormat('es-AR', {
+    style: 'currency', currency: 'ARS', maximumFractionDigits: 0,
+  }).format(n);
+
 export const ticketPriceColumns: ColumnDef<ticketPrice>[] = [
   {
     accessorKey: 'price',
@@ -29,30 +32,32 @@ export const ticketPriceColumns: ColumnDef<ticketPrice>[] = [
       <DataTableColumnHeader column={column} title="Precio" />
     ),
     cell: ({ row }) => (
-      <div className="min-w-[100px] text-sm">{row.getValue('price')}</div>
+      <span className="gm-display gm-tnum text-[13.5px] font-bold text-foreground">
+        {ars(row.getValue('price'))}
+      </span>
     ),
   },
-{
-  accessorKey: 'ticketDayType',
-  header: ({ column }) => (
-    <DataTableColumnHeader column={column} title="Tipo Horario" />
-  ),
-  cell: ({ row }) => {
-    const value = row.getValue('ticketDayType') as string;
-    return (
-      <div className="min-w-[100px] text-sm">
-        {typeMap[value] || value}
-      </div>
-    );
+  {
+    accessorKey: 'ticketDayType',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Horario" />
+    ),
+    cell: ({ row }) => {
+      const value = row.getValue('ticketDayType') as string;
+      return (
+        <Badge variant={value === 'NIGHT' ? 'blue' : 'yellow'}>
+          {typeMap[value] || value}
+        </Badge>
+      );
+    },
   },
-},
   {
     accessorKey: 'vehicleType',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tipo de Vehiculo" />
+      <DataTableColumnHeader column={column} title="Vehículo" />
     ),
     cell: ({ row }) => (
-      <div className="min-w-[100px] text-sm">{row.getValue('vehicleType')}</div>
+      <Badge variant="default">{row.getValue('vehicleType')}</Badge>
     ),
   },
   {
@@ -60,21 +65,26 @@ export const ticketPriceColumns: ColumnDef<ticketPrice>[] = [
     cell: ({ row }) => {
       const ticketPrice = row.original;
 
-      return  (
+      return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="size-8">
+              <span className="sr-only">Abrir acciones</span>
+              <MoreHorizontal className="size-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[160px]">
-            <DropdownMenuLabel className="text-sm">Acciones</DropdownMenuLabel>
+          <DropdownMenuContent
+            align="end"
+            className="w-48 border border-border bg-gm-surface p-1 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)]"
+          >
+            <DropdownMenuLabel className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+              Acciones
+            </DropdownMenuLabel>
             <UpdateTicketPriceDialog ticketPrice={ticketPrice} />
             <DeleteTicketPriceDialog ticketPrice={ticketPrice} />
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
 ];

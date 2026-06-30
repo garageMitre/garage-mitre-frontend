@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import {
   DropdownMenu,
@@ -8,12 +9,22 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { User } from '@/types/user.type';
 import { ColumnDef } from '@tanstack/react-table';
-import { BadgeCheckIcon, BadgeXIcon, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal } from 'lucide-react';
 import { ticketPrice } from '@/types/ticket-price';
 import { UpdateTicketPriceWeekOrDayDialog } from './update-ticket-price-dialog';
 import { DeleteTicketPriceWeekOrDayDialog } from './delete-ticket-price-dialog';
+
+const timeTypeMap: Record<string, string> = {
+  DIA: 'Día',
+  SEMANA: 'Semana',
+  SEMANA_Y_DIA: 'Semana y día',
+};
+
+const ars = (n: number) =>
+  new Intl.NumberFormat('es-AR', {
+    style: 'currency', currency: 'ARS', maximumFractionDigits: 0,
+  }).format(n);
 
 export const ticketPriceWeekOrDayColumns: ColumnDef<ticketPrice>[] = [
   {
@@ -22,25 +33,28 @@ export const ticketPriceWeekOrDayColumns: ColumnDef<ticketPrice>[] = [
       <DataTableColumnHeader column={column} title="Precio" />
     ),
     cell: ({ row }) => (
-      <div className="min-w-[100px] text-sm">{row.getValue('ticketTimePrice')}</div>
+      <span className="gm-display gm-tnum text-[13.5px] font-bold text-foreground">
+        {ars(row.getValue('ticketTimePrice'))}
+      </span>
     ),
   },
   {
     accessorKey: 'ticketTimeType',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tipo ticket" />
+      <DataTableColumnHeader column={column} title="Tipo" />
     ),
-    cell: ({ row }) => (
-      <div className="min-w-[100px] text-sm">{row.getValue('ticketTimeType')}</div>
-    ),
+    cell: ({ row }) => {
+      const value = row.getValue('ticketTimeType') as string;
+      return <Badge variant="orange">{timeTypeMap[value] || value}</Badge>;
+    },
   },
-    {
+  {
     accessorKey: 'vehicleType',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Tipo de Vehiculo" />
+      <DataTableColumnHeader column={column} title="Vehículo" />
     ),
     cell: ({ row }) => (
-      <div className="min-w-[100px] text-sm">{row.getValue('vehicleType')}</div>
+      <Badge variant="default">{row.getValue('vehicleType')}</Badge>
     ),
   },
   {
@@ -48,21 +62,26 @@ export const ticketPriceWeekOrDayColumns: ColumnDef<ticketPrice>[] = [
     cell: ({ row }) => {
       const ticketPrice = row.original;
 
-      return  (
+      return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="size-8">
+              <span className="sr-only">Abrir acciones</span>
+              <MoreHorizontal className="size-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[160px]">
-            <DropdownMenuLabel className="text-sm">Acciones</DropdownMenuLabel>
+          <DropdownMenuContent
+            align="end"
+            className="w-48 border border-border bg-gm-surface p-1 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)]"
+          >
+            <DropdownMenuLabel className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+              Acciones
+            </DropdownMenuLabel>
             <UpdateTicketPriceWeekOrDayDialog ticketPrice={ticketPrice} />
             <DeleteTicketPriceWeekOrDayDialog ticketPrice={ticketPrice} />
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
 ];
