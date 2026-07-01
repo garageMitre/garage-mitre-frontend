@@ -8,6 +8,7 @@ import { Customer } from '@/types/cutomer.type';
 import { Vehicle } from '@/types/vehicle.type';
 import { DataTableShell } from '@/components/data-table-shell';
 import { CreateRenterDialog } from './create-renter-dialog';
+import { CustomerInlineDetail } from '../../components/receipts/customer-inline-detail';
 
 interface RentersTableProps {
   columns: (customersRenters: Vehicle[]) => ColumnDef<Customer>[];
@@ -15,11 +16,7 @@ interface RentersTableProps {
   customersRenters: Vehicle[];
 }
 
-export function RentersTable({
-  columns,
-  data,
-  customersRenters,
-}: RentersTableProps) {
+export function RentersTable({ columns, data, customersRenters }: RentersTableProps) {
   const searchParams = useSearchParams();
   const lastNameQuery = searchParams.get('lastName') || '';
   const session = useSession();
@@ -36,6 +33,7 @@ export function RentersTable({
       toolbarRight={
         isAdmin ? <CreateRenterDialog customersRenters={customersRenters} /> : null
       }
+      renderSubComponent={(row) => <CustomerInlineDetail customer={row.original} />}
     />
   );
 }

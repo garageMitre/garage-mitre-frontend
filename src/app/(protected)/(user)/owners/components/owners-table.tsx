@@ -8,6 +8,7 @@ import { ParkingType } from '@/types/parking-type';
 import { Customer } from '@/types/cutomer.type';
 import { DataTableShell } from '@/components/data-table-shell';
 import { CreateOwnerDialog } from './create-owner-dialog';
+import { CustomerInlineDetail } from '../../components/receipts/customer-inline-detail';
 
 interface OwnersTableProps {
   columns: (parkingTypes: ParkingType[]) => ColumnDef<Customer>[];
@@ -30,6 +31,7 @@ export function OwnersTable({ columns, data, parkingTypes }: OwnersTableProps) {
       initialFilter={lastNameQuery}
       initialSort={[{ id: 'lastName', desc: false }]}
       toolbarRight={isAdmin ? <CreateOwnerDialog /> : null}
+      renderSubComponent={(row) => <CustomerInlineDetail customer={row.original} />}
     />
   );
 }

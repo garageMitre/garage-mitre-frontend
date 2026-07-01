@@ -25,7 +25,7 @@ import { DeleteRenterDialog } from './delete-renter-dialog';
 import { SoftDeleteRenterDialog } from './soft-delete-renter-dialog';
 import { RestoredRenterDialog } from './restored-renter-dialog';
 import { ViewCustomerRenterDialog } from '../../components/customers/view-customer-renter-dialog';
-import { PaymentSummaryCell } from '../../components/receipts/automatic-open-summary';
+import { ExpandSummaryButton } from '../../components/receipts/expand-summary-button';
 
 const customSort: SortingFn<Customer> = (rowA, rowB, columnId) => {
   if (rowA.original.deletedAt && !rowB.original.deletedAt) return 1;
@@ -93,19 +93,31 @@ export const renterColumns = (
     sortingFn: customSort,
   },
   {
-    id: 'paymentSummary',
+    id: 'expand',
+    header: () => (
+      <div className="w-full text-right text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        Resumen
+      </div>
+    ),
     cell: ({ row }) => {
-      const customer = row.original;
+      if (row.original.deletedAt) return null;
       return (
-        <PaymentSummaryCell
-          key={`${customer.id}-${customer.lastName}`}
-          customer={customer}
-        />
+        <div className="flex justify-end">
+          <ExpandSummaryButton
+            isOpen={row.getIsExpanded()}
+            onToggle={() => row.toggleExpanded()}
+          />
+        </div>
       );
     },
   },
   {
     id: 'actions',
+    header: () => (
+      <div className="w-full text-right text-[11px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+        Acciones
+      </div>
+    ),
     cell: ({ row }) => {
       const customer = row.original;
       const [openDropdown, setOpenDropdown] = useState(false);
@@ -113,42 +125,44 @@ export const renterColumns = (
       const isAdmin = session.data?.user.role === 'ADMIN';
 
       return (
-        <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="size-8">
-              <span className="sr-only">Abrir acciones</span>
-              <MoreHorizontal className="size-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent
-            align="end"
-            className="w-56 border border-border bg-gm-surface p-1 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)]"
-          >
-            <DropdownMenuLabel className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-              Acciones
-            </DropdownMenuLabel>
-            <ViewCustomerRenterDialog customer={customer} />
-            {isAdmin && (
-              <>
-                <DropdownMenuSeparator className="bg-border" />
-                {customer.deletedAt === null ? (
-                  <>
-                    <UpdateRenterDialog
-                      customer={customer}
-                      customersRenters={customerRenters}
-                    />
-                    <SoftDeleteRenterDialog customer={customer} />
-                  </>
-                ) : (
-                  <>
-                    <DeleteRenterDialog customer={customer} />
-                    <RestoredRenterDialog customer={customer} />
-                  </>
-                )}
-              </>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex justify-end">
+          <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="size-8">
+                <span className="sr-only">Abrir acciones</span>
+                <MoreHorizontal className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="end"
+              className="w-56 border border-border bg-gm-surface p-1 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)]"
+            >
+              <DropdownMenuLabel className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+                Acciones
+              </DropdownMenuLabel>
+              <ViewCustomerRenterDialog customer={customer} />
+              {isAdmin && (
+                <>
+                  <DropdownMenuSeparator className="bg-border" />
+                  {customer.deletedAt === null ? (
+                    <>
+                      <UpdateRenterDialog
+                        customer={customer}
+                        customersRenters={customerRenters}
+                      />
+                      <SoftDeleteRenterDialog customer={customer} />
+                    </>
+                  ) : (
+                    <>
+                      <DeleteRenterDialog customer={customer} />
+                      <RestoredRenterDialog customer={customer} />
+                    </>
+                  )}
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       );
     },
   },

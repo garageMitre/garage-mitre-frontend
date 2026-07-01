@@ -8,6 +8,7 @@ import { Customer } from '@/types/cutomer.type';
 import { Vehicle } from '@/types/vehicle.type';
 import { DataTableShell } from '@/components/data-table-shell';
 import { CreatePrivateDialog } from './create-private-dialog';
+import { CustomerInlineDetail } from '../../components/receipts/customer-inline-detail';
 
 interface PrivatesTableProps {
   columns: (customersRenters: Vehicle[]) => ColumnDef<Customer>[];
@@ -15,11 +16,7 @@ interface PrivatesTableProps {
   customersRenters: Vehicle[];
 }
 
-export function PrivatesTable({
-  columns,
-  data,
-  customersRenters,
-}: PrivatesTableProps) {
+export function PrivatesTable({ columns, data, customersRenters }: PrivatesTableProps) {
   const searchParams = useSearchParams();
   const lastNameQuery = searchParams.get('lastName') || '';
   const session = useSession();
@@ -36,6 +33,7 @@ export function PrivatesTable({
       toolbarRight={
         isAdmin ? <CreatePrivateDialog customersRenters={customersRenters} /> : null
       }
+      renderSubComponent={(row) => <CustomerInlineDetail customer={row.original} />}
     />
   );
 }

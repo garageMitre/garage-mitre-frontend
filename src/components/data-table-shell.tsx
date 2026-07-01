@@ -5,14 +5,16 @@ import {
   ColumnFiltersState,
   flexRender,
   getCoreRowModel,
+  getExpandedRowModel,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
+  Row,
   SortingState,
   Table as TanstackTable,
   useReactTable,
 } from '@tanstack/react-table';
-import { ReactNode, useState } from 'react';
+import { Fragment, ReactNode, useState } from 'react';
 import { Search, Inbox } from 'lucide-react';
 import {
   Table,
@@ -38,6 +40,7 @@ interface DataTableShellProps<TData, TValue> {
   pageSize?: number;
   emptyMessage?: string;
   className?: string;
+  renderSubComponent?: (row: Row<TData>) => ReactNode;
 }
 
 export function DataTableShell<TData, TValue>({
@@ -51,6 +54,7 @@ export function DataTableShell<TData, TValue>({
   pageSize = 10,
   emptyMessage = 'No hay resultados para mostrar.',
   className,
+  renderSubComponent,
 }: DataTableShellProps<TData, TValue>) {
   const [sorting, setSorting] = useState<SortingState>(initialSort);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
@@ -68,6 +72,8 @@ export function DataTableShell<TData, TValue>({
     getPaginationRowModel: getPaginationRowModel(),
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
+    getRowCanExpand: renderSubComponent ? () => true : undefined,
     state: { columnFilters, sorting },
     initialState: { pagination: { pageSize }, sorting: initialSort },
     autoResetPageIndex: false,
@@ -124,19 +130,31 @@ export function DataTableShell<TData, TValue>({
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id} className="whitespace-nowrap">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </TableCell>
-                    ))}
-                  </TableRow>
+                  <Fragment key={row.id}>
+                    <TableRow
+                      data-state={row.getIsSelected() && 'selected'}
+                      className={row.getIsExpanded() ? 'border-b-0 bg-gm-surface-2/20' : undefined}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id} className="whitespace-nowrap">
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                    {row.getIsExpanded() && renderSubComponent && (
+                      <TableRow className="hover:bg-transparent border-b border-border">
+                        <TableCell
+                          colSpan={row.getVisibleCells().length}
+                          className="p-0"
+                        >
+                          {renderSubComponent(row)}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </Fragment>
                 ))
               ) : (
                 <TableRow>
