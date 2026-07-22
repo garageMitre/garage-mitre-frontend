@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { TicketRegistration } from "@/types/ticket-registration.type";
 import { CreateTicketRegistrationDialog } from "../tickets-days-or-weeks/create-ticket-registration-for-day-dialog";
 import ScannerButton from "../../components/scanner-button";
+import { useTour, tourHighlight, tourTransition } from "./ticket-tour";
 import {
   Car,
   Clock,
@@ -16,6 +17,24 @@ import {
   Timer,
 } from "lucide-react";
 
+const TOUR_STEPS = [
+  {
+    key: 'scanner',
+    title: 'Escáner de código de barras',
+    desc: 'Activá el escáner y pasá el código de barras del ticket. El sistema registra automáticamente la entrada o salida del vehículo.',
+  },
+  {
+    key: 'ticket',
+    title: 'Último registro',
+    desc: 'Acá ves el detalle del último ticket procesado: código de barras, horario de entrada y salida, y el precio calculado según tipo de vehículo.',
+  },
+  {
+    key: 'dayTicket',
+    title: 'Tickets por día o semana',
+    desc: 'Para tickets de día completo o semana entera, usá este botón para registrarlos manualmente sin necesidad de escanear el código.',
+  },
+];
+
 export default function CardTicket({
   initialRegistrations,
 }: {
@@ -25,6 +44,7 @@ export default function CardTicket({
     useState<TicketRegistration[]>(initialRegistrations);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const router = useRouter();
+  const tour = useTour(TOUR_STEPS);
 
   useEffect(() => {
     const handleNewScan = async () => {
@@ -59,9 +79,20 @@ export default function CardTicket({
 
   return (
     <>
-      <ScannerButton isDialogOpen={isDialogOpen} />
+      {/* Tour help button */}
+      <div className="flex justify-end mb-2 max-w-3xl mx-auto">
+        {tour.node}
+      </div>
 
-      <div className="w-full max-w-3xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div ref={(el) => tour.refFor('scanner')(el)} style={tour.isActive('scanner') ? { ...tourTransition, ...tourHighlight } : tourTransition}>
+        <ScannerButton isDialogOpen={isDialogOpen} />
+      </div>
+
+      <div
+        ref={(el) => tour.refFor('ticket')(el)}
+        style={tour.isActive('ticket') ? { ...tourTransition, ...tourHighlight } : tourTransition}
+        className="w-full max-w-3xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700"
+      >
         <div className="relative flex w-full flex-col md:flex-row">
           {/* ── Main ticket content (left) ── */}
           <div className="relative flex-1 p-8 md:p-10 overflow-hidden rounded-3xl md:rounded-r-none md:rounded-l-3xl border border-border/50 border-b-0 md:border-b md:border-r-0 bg-card/30 backdrop-blur-xl">
@@ -254,7 +285,13 @@ export default function CardTicket({
         </div>
       </div>
 
-      <CreateTicketRegistrationDialog setIsDialogOpen={setIsDialogOpen} />
+      <div
+        ref={(el) => tour.refFor('dayTicket')(el)}
+        style={tour.isActive('dayTicket') ? { ...tourTransition, ...tourHighlight } : tourTransition}
+        className="inline-block"
+      >
+        <CreateTicketRegistrationDialog setIsDialogOpen={setIsDialogOpen} />
+      </div>
     </>
   );
 }
