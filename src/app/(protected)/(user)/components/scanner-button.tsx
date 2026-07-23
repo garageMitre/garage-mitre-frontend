@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, startTransition } from 'react';
+import React, { useState, useRef, useEffect, startTransition } from 'react';
 import { startScanner } from '@/services/scanner.service';
 import { toast } from 'sonner';
 import { getCustomerById } from '@/services/customers.service';
@@ -13,10 +13,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ReceiptSchemaType } from '@/schemas/receipt.schema';
 import { Receipt } from '@/types/receipt.type';
-import { Camera, Hash, Keyboard, Loader2, ScanLine, X } from 'lucide-react';
+import { Hash, Keyboard, Loader2, QrCode, ScanLine, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-export default function ScannerButton({ isDialogOpen }: { isDialogOpen: boolean }) {
+export default function ScannerButton({
+  isDialogOpen,
+  scannerRef,
+  scannerStyle,
+  manualRef,
+  manualStyle,
+}: {
+  isDialogOpen: boolean;
+  scannerRef?: (el: HTMLElement | null) => void;
+  scannerStyle?: React.CSSProperties;
+  manualRef?: (el: HTMLElement | null) => void;
+  manualStyle?: React.CSSProperties;
+}) {
   const [isScanning, setIsScanning] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -118,80 +130,69 @@ export default function ScannerButton({ isDialogOpen }: { isDialogOpen: boolean 
 
   return (
     <div className="flex flex-col items-center gap-5">
-      {/* Status indicator */}
-      <div
-        className={cn(
-          'flex items-center gap-3 rounded-full border px-4 py-2 transition-colors',
-          isScanning
-            ? 'border-gm-orange/40 bg-gm-orange/15 text-[#FF8458]'
-            : manualInputVisible
-            ? 'border-gm-yellow/40 bg-gm-yellow/15 text-gm-yellow'
-            : 'border-border bg-gm-surface-2 text-muted-foreground',
-        )}
-      >
-        {isScanning ? (
-          <>
-            <Loader2 className="size-4 animate-spin" />
-            <span className="gm-display text-[12px] font-bold tracking-[0.06em]">
-              Escaneando…
-            </span>
-          </>
-        ) : manualInputVisible ? (
-          <>
-            <Keyboard className="size-4" />
-            <span className="gm-display text-[12px] font-bold tracking-[0.06em]">
-              Ingreso manual activo
-            </span>
-          </>
-        ) : (
-          <>
-            <Camera className="size-4" />
-            <span className="gm-display text-[12px] font-bold tracking-[0.06em]">
-              Lector listo — apuntá el código
-            </span>
-          </>
+      {/* Scanner area — dashed card (tour ref) */}
+      <div ref={scannerRef} style={scannerStyle} className="w-full">
+        <div
+          className={cn(
+            'relative w-full flex flex-col items-center gap-2.5 py-7 px-6 rounded-[20px] border border-dashed transition-all duration-300',
+            isScanning
+              ? 'border-gm-orange/50 bg-gm-orange/10 text-[#FF8458]'
+              : 'border-gm-yellow/35 bg-[hsl(32_22%_9%/0.35)] text-gm-yellow/90',
+          )}
+        >
+          {isScanning ? (
+            <Loader2 className="size-[26px] animate-spin" />
+          ) : (
+            <QrCode className="size-[26px]" strokeWidth={1.6} />
+          )}
+          <span className="text-[13.5px] font-semibold">
+            {isScanning ? 'Escaneando…' : 'Escanear código de barras'}
+          </span>
+        </div>
+
+        {/* Hidden input that captures scan input */}
+        {!manualInputVisible && (
+          <input
+            ref={inputRef}
+            type="text"
+            autoFocus
+            onBlur={() => setIsScanning(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit(e.currentTarget.value);
+                e.currentTarget.value = '';
+              }
+            }}
+            className="absolute h-0 w-0 opacity-0 pointer-events-none"
+            aria-hidden
+          />
         )}
       </div>
 
-      {/* Hidden input that captures scan input */}
-      {!manualInputVisible && (
-        <input
-          ref={inputRef}
-          type="text"
-          autoFocus
-          onBlur={() => setIsScanning(false)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') {
-              e.preventDefault();
-              handleSubmit(e.currentTarget.value);
-              e.currentTarget.value = '';
-            }
-          }}
-          className="absolute h-0 w-0 opacity-0 pointer-events-none"
-          aria-hidden
-        />
-      )}
-
-      {/* Manual entry toggle */}
+      {/* Manual entry toggle + form */}
+      <div className="flex flex-col items-center gap-3 w-full">
       <button
+        ref={manualRef}
+        style={manualStyle}
         onClick={() => setManualInputVisible((p) => !p)}
         className={cn(
-          'group relative inline-flex items-center gap-3 rounded-2xl border px-5 py-3 text-sm font-semibold backdrop-blur-xl transition-all duration-300',
+          'group relative inline-flex items-center gap-3 rounded-2xl border px-6 py-3.5 text-sm font-semibold backdrop-blur-xl transition-all duration-300',
           manualInputVisible
-            ? 'border-border/60 bg-gm-surface-2/80 text-muted-foreground hover:bg-gm-surface-3'
+            ? 'border-border/50 bg-card/30 text-foreground hover:border-border/70'
             : 'border-border/50 bg-card/30 text-foreground hover:border-gm-orange/40 hover:bg-gm-orange/10 hover:shadow-[0_0_30px_-8px_hsl(var(--gm-orange)/0.3)]',
         )}
       >
         {manualInputVisible ? (
           <>
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-border/40 bg-white/5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/40 bg-white/5 transition-colors">
               <X className="size-4" />
             </span>
             Cancelar ingreso manual
           </>
         ) : (
           <>
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-gm-orange/30 bg-gm-orange/15 text-gm-orange transition-colors group-hover:bg-gm-orange/25">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-gm-orange/30 bg-gm-orange/15 text-[#FF8458] transition-colors group-hover:bg-gm-orange/25">
               <Keyboard className="size-4" />
             </span>
             Ingresar código manualmente
@@ -238,6 +239,8 @@ export default function ScannerButton({ isDialogOpen }: { isDialogOpen: boolean 
           </p>
         </div>
       )}
+
+      </div>
 
       <OpenScannerDialog
         open={dialogOpen}

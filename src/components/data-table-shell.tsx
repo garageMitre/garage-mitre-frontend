@@ -84,7 +84,7 @@ export function DataTableShell<TData, TValue>({
       {/* TOOLBAR */}
       <div className="flex flex-col sm:flex-row sm:items-center gap-3">
         {filterColumn && (
-          <div className="relative w-full sm:max-w-xs">
+          <div data-tour="customer-filter" className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground" />
             <Input
               placeholder={filterPlaceholder}

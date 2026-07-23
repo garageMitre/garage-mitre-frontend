@@ -22,10 +22,10 @@ const DURATION = 4200;
 function tooltipStyle(pos: Pos | null): React.CSSProperties {
   const base: React.CSSProperties = {
     position: 'fixed',
-    zIndex: 9999,
+    zIndex: 50,
     width: 320,
-    background: '#18181b',
-    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'hsl(32 22% 9%)',
+    border: '1px solid hsl(34 16% 28%)',
     borderRadius: 12,
     padding: 18,
     boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
@@ -53,18 +53,29 @@ export function useTour(steps: TourStep[]): TourHandle {
 
   useEffect(() => { setMounted(true); }, []);
 
-  // Reposition + resize
+  // Reposition + resize + auto-scroll the target into view on smaller screens
   useEffect(() => {
     if (!open) return;
+    let scrolled = false;
     const snap = () => {
       const el = elsRef.current[steps[idx]?.key];
       if (!el) return;
+      if (!scrolled) {
+        scrolled = true;
+        const r0 = el.getBoundingClientRect();
+        const fullyVisible = r0.top >= 0 && r0.bottom <= window.innerHeight;
+        if (!fullyVisible) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
       const r = el.getBoundingClientRect();
       setPos({ top: r.top, left: r.left, width: r.width, height: r.height });
     };
     snap();
     window.addEventListener('resize', snap);
-    return () => window.removeEventListener('resize', snap);
+    window.addEventListener('scroll', snap, true);
+    return () => {
+      window.removeEventListener('resize', snap);
+      window.removeEventListener('scroll', snap, true);
+    };
   }, [open, idx, steps]);
 
   // Auto-advance timer — restarts on each step
@@ -100,7 +111,21 @@ export function useTour(steps: TourStep[]): TourHandle {
     <>
       <button
         onClick={start}
-        className="inline-flex items-center gap-1.5 rounded-full border border-white/20 px-3 py-1 text-[13px] font-semibold text-[hsl(217_91%_72%)] transition-colors hover:border-white/30 hover:bg-white/5"
+        className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[13px] font-semibold transition-colors"
+        style={
+          open
+            ? {
+                color: 'hsl(46 92% 53%)',
+                borderColor: 'hsl(46 92% 53% / 0.4)',
+                background: 'hsl(46 92% 53% / 0.08)',
+                animation: 'gm-tour-pulse 1.6s ease-in-out infinite',
+              }
+            : {
+                color: 'hsl(46 92% 53%)',
+                borderColor: 'hsl(46 92% 53% / 0.4)',
+                background: 'hsl(46 92% 53% / 0.08)',
+              }
+        }
       >
         <HelpCircle size={14} />
         Ayuda
@@ -111,7 +136,7 @@ export function useTour(steps: TourStep[]): TourHandle {
           {/* Overlay */}
           <div
             onClick={close}
-            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9990, cursor: 'pointer' }}
+            style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 40, cursor: 'pointer' }}
           />
 
           {/* Tooltip */}
@@ -121,27 +146,27 @@ export function useTour(steps: TourStep[]): TourHandle {
             onMouseLeave={() => { pausedRef.current = false; }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'hsl(217 91% 70%)', letterSpacing: '0.03em' }}>
+              <span style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'hsl(46 92% 53%)' }}>
                 PASO {idx + 1} DE {steps.length}
               </span>
               <button
                 onClick={close}
-                style={{ background: 'transparent', border: 'none', color: 'hsl(0 0% 55%)', fontSize: 14, cursor: 'pointer', lineHeight: 1, padding: 0 }}
+                style={{ background: 'transparent', border: 'none', color: 'hsl(34 12% 60%)', fontSize: 14, cursor: 'pointer', lineHeight: 1, padding: 0 }}
               >
                 ✕
               </button>
             </div>
 
-            <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700, color: '#fff' }}>{s.title}</h3>
-            <p style={{ margin: '0 0 14px', fontSize: 13.5, lineHeight: 1.5, color: 'hsl(0 0% 75%)' }}>{s.desc}</p>
+            <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 700, color: 'hsl(38 36% 92%)' }}>{s.title}</h3>
+            <p style={{ margin: '0 0 14px', fontSize: 13.5, lineHeight: 1.5, color: 'hsl(34 12% 70%)' }}>{s.desc}</p>
 
             {/* Progress bar */}
-            <div style={{ height: 3, borderRadius: 2, background: 'rgba(255,255,255,0.1)', overflow: 'hidden', marginBottom: 14 }}>
+            <div style={{ height: 3, borderRadius: 2, background: 'hsl(34 18% 18%)', overflow: 'hidden', marginBottom: 14 }}>
               <div
                 key={`${idx}-${open}`}
                 style={{
                   height: '100%',
-                  background: 'hsl(217 91% 65%)',
+                  background: 'hsl(46 92% 53%)',
                   animation: `gm-tour-progress ${DURATION}ms linear forwards`,
                 }}
               />
@@ -150,7 +175,7 @@ export function useTour(steps: TourStep[]): TourHandle {
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <button
                 onClick={close}
-                style={{ background: 'transparent', border: 'none', color: 'hsl(0 0% 55%)', fontSize: 13, cursor: 'pointer', padding: 0 }}
+                style={{ background: 'transparent', border: 'none', color: 'hsl(34 12% 60%)', fontSize: 13, cursor: 'pointer', padding: 0 }}
               >
                 Saltar tour
               </button>
@@ -160,8 +185,8 @@ export function useTour(steps: TourStep[]): TourHandle {
                   disabled={idx === 0}
                   style={{
                     background: 'transparent',
-                    border: '1px solid rgba(255,255,255,0.15)',
-                    color: idx === 0 ? 'hsl(0 0% 35%)' : '#e5e5e5',
+                    border: '1px solid hsl(34 18% 18%)',
+                    color: idx === 0 ? 'hsl(34 12% 35%)' : 'hsl(38 36% 92%)',
                     fontSize: 13, fontWeight: 500,
                     padding: '6px 14px', borderRadius: 7,
                     cursor: idx === 0 ? 'default' : 'pointer',
@@ -172,8 +197,11 @@ export function useTour(steps: TourStep[]): TourHandle {
                 <button
                   onClick={next}
                   style={{
-                    background: '#fafafa', border: 'none', color: '#111',
-                    fontSize: 13, fontWeight: 600, padding: '6px 14px',
+                    background: 'hsl(46 92% 53%)',
+                    border: 'none',
+                    color: 'hsl(30 78% 7%)',
+                    fontSize: 13, fontWeight: 700,
+                    padding: '6px 14px',
                     borderRadius: 7, cursor: 'pointer',
                   }}
                 >
@@ -193,9 +221,10 @@ export function useTour(steps: TourStep[]): TourHandle {
 
 /** Inline style for highlighted elements */
 export const tourHighlight: React.CSSProperties = {
-  boxShadow: '0 0 0 3px rgba(96,165,250,0.95), 0 0 32px 6px rgba(96,165,250,0.35)',
-  zIndex: 9995,
-  transform: 'scale(1.015)',
+  boxShadow: '0 0 0 3px hsl(46 92% 53% / 0.95), 0 0 30px 6px hsl(46 92% 53% / 0.35)',
+  zIndex: 45,
+  transform: 'scale(1.012)',
+  borderRadius: '1rem',
 };
 
 export const tourTransition: React.CSSProperties = {

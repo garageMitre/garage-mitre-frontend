@@ -9,6 +9,7 @@ import { Customer } from '@/types/cutomer.type';
 import { DataTableShell } from '@/components/data-table-shell';
 import { CreateOwnerDialog } from './create-owner-dialog';
 import { CustomerInlineDetail } from '../../components/receipts/customer-inline-detail';
+import { CustomerPageTour } from '../../components/customer-page-tour';
 
 interface OwnersTableProps {
   columns: (parkingTypes: ParkingType[]) => ColumnDef<Customer>[];
@@ -30,7 +31,16 @@ export function OwnersTable({ columns, data, parkingTypes }: OwnersTableProps) {
       filterPlaceholder="Filtrar por apellido..."
       initialFilter={lastNameQuery}
       initialSort={[{ id: 'lastName', desc: false }]}
-      toolbarRight={isAdmin ? <CreateOwnerDialog /> : null}
+      toolbarRight={
+        <div className="flex items-center gap-2">
+          <CustomerPageTour entityLabel="propietario" />
+          {isAdmin && (
+            <div data-tour="customer-create">
+              <CreateOwnerDialog />
+            </div>
+          )}
+        </div>
+      }
       renderSubComponent={(row) => <CustomerInlineDetail customer={row.original} />}
     />
   );

@@ -103,10 +103,12 @@ export const privateColumns = (
       if (row.original.deletedAt) return null;
       return (
         <div className="flex justify-end">
-          <ExpandSummaryButton
-            isOpen={row.getIsExpanded()}
-            onToggle={() => row.toggleExpanded()}
-          />
+          <span data-tour="customer-expand" className="inline-flex">
+            <ExpandSummaryButton
+              isOpen={row.getIsExpanded()}
+              onToggle={() => row.toggleExpanded()}
+            />
+          </span>
         </div>
       );
     },
@@ -128,7 +130,7 @@ export const privateColumns = (
         <div className="flex justify-end">
           <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-8">
+              <Button data-tour="customer-actions" variant="ghost" size="icon" className="size-8">
                 <span className="sr-only">Abrir acciones</span>
                 <MoreHorizontal className="size-4" />
               </Button>

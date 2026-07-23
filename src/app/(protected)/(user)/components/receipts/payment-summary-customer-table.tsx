@@ -61,6 +61,7 @@ import { Receipt } from '@/types/receipt.type';
 import { ReceiptMovementsDrawer } from './receipt-movements-drower';
 import { DeleteReceiptDialog } from './delete-receipt-dialog';
 import { cn } from '@/lib/utils';
+import { DialogTourButton, TOUR_POPUP_ATTR } from '../dialog-tour-button';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -81,7 +82,7 @@ const ars = (n: number | undefined | null) =>
     ? new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n)
     : '—';
 
-function fmt(dateStr?: string | null, format = 'DD/MM/YY') {
+function fmt(dateStr?: string | Date | null, format = 'DD/MM/YY') {
   if (!dateStr) return '—';
   const d = dayjs.tz(dateStr, TZ);
   return d.isValid() ? d.format(format) : '—';
@@ -352,6 +353,18 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
   const pendingCount  = pendingAll.length;
   const pendingTotal  = pendingAll.reduce((s, r) => s + (r.price > 0 ? r.price : r.startAmount), 0);
   const firstPending  = sorted.find(r => r.status === 'PENDING') ?? null;
+  const firstPendingEntry: MonthEntry | null = firstPending?.startDate
+    ? {
+        month: dayjs.tz(firstPending.startDate, TZ).month(),
+        year: dayjs.tz(firstPending.startDate, TZ).year(),
+        receipt: firstPending,
+        status: 'POR_COBRAR',
+        amount: firstPending.price > 0 ? firstPending.price : firstPending.startAmount,
+      }
+    : null;
+  // Sidebar always shows a specific month's balance, never the aggregate total —
+  // falls back to the current pending month when nothing is explicitly selected.
+  const effectiveEntry = selectedEntry ?? firstPendingEntry;
 
   const totalPages    = Math.ceil(sorted.length / PAGE_SIZE);
   const paginated     = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
@@ -369,7 +382,7 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
   const cleanPhone    = customer.phone?.replace(/\D/g, '') ?? '';
 
   // WhatsApp — use selected or first pending receipt to mention the specific month
-  const receiptForWa  = selectedEntry?.receipt ?? firstPending;
+  const receiptForWa  = effectiveEntry?.receipt ?? firstPending;
   const waMonthDate   = receiptForWa?.startDate ? dayjs.tz(receiptForWa.startDate, TZ) : null;
   const waMsg = encodeURIComponent(
     waMonthDate?.isValid()
@@ -378,8 +391,8 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
   );
   const waUrl = cleanPhone ? `https://wa.me/549${cleanPhone}?text=${waMsg}` : null;
 
-  const selectedMonth = selectedEntry
-    ? `${MONTH_SHORT[selectedEntry.month]} ${String(selectedEntry.year).slice(-2)}`
+  const selectedMonth = effectiveEntry
+    ? `${MONTH_SHORT[effectiveEntry.month]} ${String(effectiveEntry.year).slice(-2)}`
     : null;
 
   // Vehicle chips (max 4 shown, rest collapsed)
@@ -437,17 +450,27 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
 
         <DialogContent
           className={cn(
-            'max-w-[1100px] w-full h-[90vh] overflow-hidden',
+            'max-w-[1100px] w-full h-[90vh] max-h-[760px] overflow-hidden',
             'grid-rows-[auto_1fr]',
             '[&>div:nth-child(2)]:p-0',
             '[&>div:nth-child(2)]:gap-0',
             '[&>div:nth-child(2)]:overflow-hidden',
           )}
+          onPointerDownOutside={(e) => {
+            // Tour tooltip/ring are portaled to document.body (real viewport
+            // coordinates, so they aren't clipped by this dialog's own
+            // overflow-hidden) — without this guard Radix would see clicks
+            // on them as "outside" and close the dialog mid-tour.
+            const target = e.detail.originalEvent.target as HTMLElement | null;
+            if (target?.closest(`[${TOUR_POPUP_ATTR}]`)) {
+              e.preventDefault();
+            }
+          }}
         >
           <div className="flex flex-col h-full overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(245,197,24,.07) 0%, transparent 40%), hsl(var(--background))' }}>
 
             {/* ── HEADER ──────────────────────────────────────────────── */}
-            <div className="shrink-0 flex items-start gap-4 px-6 py-4 pr-16 border-b border-border">
+            <div data-dialog-tour="header" className="shrink-0 flex items-start gap-4 px-6 py-4 pr-16 border-b border-border">
               {/* Avatar */}
               <div className="grid size-[52px] shrink-0 place-items-center rounded-md bg-gm-orange font-display font-bold text-[18px] text-white">
                 {initials}
@@ -530,6 +553,11 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
               )}
             </div>
 
+            {/* ── TOUR STRIP ────────────────────────────────────────────── */}
+            <div className="shrink-0 flex justify-end px-4 py-1.5 border-b border-border/40">
+              <DialogTourButton />
+            </div>
+
             {/* ── BODY ──────────────────────────────────────────────────── */}
             <div className="flex flex-1 overflow-hidden min-h-0">
 
@@ -537,7 +565,7 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
               <div className="flex-1 overflow-y-auto min-w-0 px-6 py-5 space-y-6">
 
                 {/* ESTADO DE CUENTA */}
-                <section>
+                <section data-dialog-tour="timeline">
                   <div className="flex items-center justify-between mb-1">
                     <h3 className="gm-display text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                       Estado de Cuenta
@@ -564,7 +592,7 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
                     <div className="flex gap-2 overflow-x-auto pb-2 mt-3">
                       {timeline.map(entry => {
                         const key = `${entry.year}-${entry.month}`;
-                        const isSel = selectedEntry?.year === entry.year && selectedEntry?.month === entry.month;
+                        const isSel = effectiveEntry?.year === entry.year && effectiveEntry?.month === entry.month;
                         return (
                           <MonthCard
                             key={key}
@@ -583,7 +611,7 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
                 </section>
 
                 {/* RECIBOS EMITIDOS */}
-                <section>
+                <section data-dialog-tour="receipts">
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="gm-display text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
                       Recibos Emitidos
@@ -618,9 +646,16 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
                               </Badge>
                             </TableCell>
                             <TableCell className="text-[12px] py-2">
-                              {r.startDate
-                                ? `Abono mensual · ${MONTH_FULL[dayjs.tz(r.startDate, TZ).month()]} ${String(dayjs.tz(r.startDate, TZ).year()).slice(-2)}`
-                                : 'Abono mensual'}
+                              <div>
+                                {r.startDate
+                                  ? `Abono mensual · ${MONTH_FULL[dayjs.tz(r.startDate, TZ).month()]}`
+                                  : 'Abono mensual'}
+                              </div>
+                              {r.createdAt && (
+                                <div className="text-[10.5px] text-muted-foreground/70 mt-0.5">
+                                  Creado {fmt(r.createdAt)}
+                                </div>
+                              )}
                             </TableCell>
                             <TableCell className="text-[11.5px] gm-mono text-muted-foreground py-2">
                               {fmt(r.paymentDate)}
@@ -639,7 +674,7 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
                                 onOpenChange={v => setOpenDropdownId(v ? r.id : null)}
                               >
                                 <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground">
+                                  <Button data-dialog-tour="receipt-actions" variant="ghost" size="icon" className="size-7 text-muted-foreground hover:text-foreground">
                                     <MoreHorizontal size={14} />
                                   </Button>
                                 </DropdownMenuTrigger>
@@ -731,7 +766,7 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
               </div>
 
               {/* ── RIGHT SIDEBAR ─────────────────────────────────────── */}
-              <div className="w-[258px] shrink-0 border-l border-border overflow-y-auto px-4 py-5 flex flex-col gap-5">
+              <div data-dialog-tour="sidebar" className="w-[258px] shrink-0 border-l border-border overflow-y-auto px-4 py-5 flex flex-col gap-5">
 
                 {/* SALDO A PAGAR */}
                 <section>
@@ -749,7 +784,7 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
                     )}
                   </div>
 
-                  {selectedEntry ? (
+                  {effectiveEntry ? (
                     <>
                       <div className="mb-1">
                         <span className="text-[10.5px] font-semibold text-gm-yellow uppercase tracking-wide">
@@ -758,23 +793,23 @@ export function PaymentSummaryTable({ customer, children, autoOpen }: PaymentSum
                       </div>
                       <div className={cn(
                         'gm-display gm-tnum text-[30px] font-bold leading-none',
-                        selectedEntry.status === 'PAGADO' ? 'text-[#9AD588]' : 'text-foreground',
+                        effectiveEntry.status === 'PAGADO' ? 'text-[#9AD588]' : 'text-foreground',
                       )}>
-                        {ars(selectedEntry.amount)}
+                        {ars(effectiveEntry.amount)}
                       </div>
                       <p className="text-[11.5px] text-muted-foreground mt-1.5 leading-snug">
-                        {selectedEntry.status === 'PAGADO'
-                          ? `Pagado · ${MONTH_FULL[selectedEntry.month]} ${selectedEntry.year}`
-                          : `Pendiente · ${MONTH_FULL[selectedEntry.month]} ${selectedEntry.year}`}
+                        {effectiveEntry.status === 'PAGADO'
+                          ? `Pagado · ${MONTH_FULL[effectiveEntry.month]} ${effectiveEntry.year}`
+                          : `Pendiente · ${MONTH_FULL[effectiveEntry.month]} ${effectiveEntry.year}`}
                       </p>
-                      {selectedEntry.status === 'POR_COBRAR' && (
+                      {effectiveEntry.status === 'POR_COBRAR' && (
                         <div className="space-y-2 mt-4">
                           <Button
                             className="w-full h-8 text-[12.5px] gap-2"
-                            onClick={() => selectedEntry.receipt && handleRegister(selectedEntry.receipt)}
+                            onClick={() => effectiveEntry.receipt && handleRegister(effectiveEntry.receipt)}
                           >
                             <CreditCard size={13} />
-                            {`Registrar · ${MONTH_SHORT[selectedEntry.month]}`}
+                            {`Registrar · ${MONTH_SHORT[effectiveEntry.month]}`}
                           </Button>
                           {waUrl && (
                             <Button

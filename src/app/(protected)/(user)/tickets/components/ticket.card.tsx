@@ -19,19 +19,24 @@ import {
 
 const TOUR_STEPS = [
   {
-    key: 'scanner',
-    title: 'Escáner de código de barras',
-    desc: 'Activá el escáner y pasá el código de barras del ticket. El sistema registra automáticamente la entrada o salida del vehículo.',
+    key: "scanner",
+    title: "Escáner de código de barras",
+    desc: "Activá el escáner y pasá el código de barras del ticket. El sistema registra automáticamente la entrada o salida del vehículo.",
   },
   {
-    key: 'ticket',
-    title: 'Último registro',
-    desc: 'Acá ves el detalle del último ticket procesado: código de barras, horario de entrada y salida, y el precio calculado según tipo de vehículo.',
+    key: "manual",
+    title: "Ingreso manual de código",
+    desc: "Si el código de barras no escanea, tocá acá para escribirlo a mano y confirmarlo.",
   },
   {
-    key: 'dayTicket',
-    title: 'Tickets por día o semana',
-    desc: 'Para tickets de día completo o semana entera, usá este botón para registrarlos manualmente sin necesidad de escanear el código.',
+    key: "ticket",
+    title: "Último registro",
+    desc: "Acá ves el detalle del último ticket procesado: código de barras, horario de entrada y salida, y el precio calculado según tipo de vehículo.",
+  },
+  {
+    key: "dayTicket",
+    title: "Tickets por día o semana",
+    desc: "Para tickets de día completo o semana entera, usá este botón para registrarlos manualmente sin necesidad de escanear el código.",
   },
 ];
 
@@ -84,13 +89,23 @@ export default function CardTicket({
         {tour.node}
       </div>
 
-      <div ref={(el) => tour.refFor('scanner')(el)} style={tour.isActive('scanner') ? { ...tourTransition, ...tourHighlight } : tourTransition}>
-        <ScannerButton isDialogOpen={isDialogOpen} />
+      <div className="w-full max-w-3xl mx-auto">
+        <ScannerButton
+          isDialogOpen={isDialogOpen}
+          scannerRef={(el) => tour.refFor("scanner")(el)}
+          scannerStyle={tour.isActive("scanner") ? { ...tourTransition, ...tourHighlight } : tourTransition}
+          manualRef={(el) => tour.refFor("manual")(el)}
+          manualStyle={tour.isActive("manual") ? { ...tourTransition, ...tourHighlight } : tourTransition}
+        />
       </div>
 
       <div
-        ref={(el) => tour.refFor('ticket')(el)}
-        style={tour.isActive('ticket') ? { ...tourTransition, ...tourHighlight } : tourTransition}
+        ref={(el) => tour.refFor("ticket")(el)}
+        style={
+          tour.isActive("ticket")
+            ? { ...tourTransition, ...tourHighlight }
+            : tourTransition
+        }
         className="w-full max-w-3xl mx-auto mt-8 animate-in fade-in slide-in-from-bottom-4 duration-700"
       >
         <div className="relative flex w-full flex-col md:flex-row">
@@ -133,7 +148,7 @@ export default function CardTicket({
 
                 <div>
                   <h1 className="gm-display text-4xl font-bold tracking-tight text-foreground md:text-5xl">
-                    Garage{' '}
+                    Garage{" "}
                     <span className="text-transparent bg-clip-text bg-gradient-to-r from-gm-yellow to-gm-orange">
                       Mitre
                     </span>
@@ -285,12 +300,17 @@ export default function CardTicket({
         </div>
       </div>
 
-      <div
-        ref={(el) => tour.refFor('dayTicket')(el)}
-        style={tour.isActive('dayTicket') ? { ...tourTransition, ...tourHighlight } : tourTransition}
-        className="inline-block"
-      >
-        <CreateTicketRegistrationDialog setIsDialogOpen={setIsDialogOpen} />
+      <div className="w-full max-w-3xl mx-auto flex justify-center mt-2">
+        <div
+          ref={(el) => tour.refFor("dayTicket")(el)}
+          style={
+            tour.isActive("dayTicket")
+              ? { ...tourTransition, ...tourHighlight }
+              : tourTransition
+          }
+        >
+          <CreateTicketRegistrationDialog setIsDialogOpen={setIsDialogOpen} />
+        </div>
       </div>
     </>
   );

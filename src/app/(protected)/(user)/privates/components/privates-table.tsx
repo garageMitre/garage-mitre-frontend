@@ -9,6 +9,7 @@ import { Vehicle } from '@/types/vehicle.type';
 import { DataTableShell } from '@/components/data-table-shell';
 import { CreatePrivateDialog } from './create-private-dialog';
 import { CustomerInlineDetail } from '../../components/receipts/customer-inline-detail';
+import { CustomerPageTour } from '../../components/customer-page-tour';
 
 interface PrivatesTableProps {
   columns: (customersRenters: Vehicle[]) => ColumnDef<Customer>[];
@@ -31,7 +32,14 @@ export function PrivatesTable({ columns, data, customersRenters }: PrivatesTable
       initialFilter={lastNameQuery}
       initialSort={[{ id: 'lastName', desc: false }]}
       toolbarRight={
-        isAdmin ? <CreatePrivateDialog customersRenters={customersRenters} /> : null
+        <div className="flex items-center gap-2">
+          <CustomerPageTour entityLabel="inquilino de terceros" />
+          {isAdmin && (
+            <div data-tour="customer-create">
+              <CreatePrivateDialog customersRenters={customersRenters} />
+            </div>
+          )}
+        </div>
       }
       renderSubComponent={(row) => <CustomerInlineDetail customer={row.original} />}
     />

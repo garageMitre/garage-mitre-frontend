@@ -1,5 +1,6 @@
-export const dynamic = "force-dynamic"
-export const fetchCache = "force-no-store"
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 import { getTicketRegistrations } from "@/services/tickets.service";
 import CardTicket from "./components/ticket.card";
 

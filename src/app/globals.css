@@ -437,6 +437,10 @@
   from { width: 0; }
   to   { width: 100%; }
 }
+@keyframes gm-tour-pulse {
+  0%, 100% { box-shadow: 0 0 0 4px hsl(46 92% 53% / 0.3), 0 0 0 1px hsl(46 92% 53% / 0.9); }
+  50%       { box-shadow: 0 0 0 8px hsl(46 92% 53% / 0.12), 0 0 0 1px hsl(46 92% 53% / 0.9); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .gm-rc::before,
