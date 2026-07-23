@@ -442,6 +442,30 @@
   50%       { box-shadow: 0 0 0 8px hsl(46 92% 53% / 0.12), 0 0 0 1px hsl(46 92% 53% / 0.9); }
 }
 
+@keyframes gm-scanline {
+  0%   { transform: translateY(-100%); opacity: 0; }
+  12%  { opacity: 1; }
+  88%  { opacity: 1; }
+  100% { transform: translateY(2100%); opacity: 0; }
+}
+
+@keyframes gm-ticket-rise {
+  from { opacity: 0; transform: translateY(16px) scale(.99); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes gm-bgsweep {
+  0%   { background-position: -160% 0; }
+  100% { background-position: 160% 0; }
+}
+@keyframes gm-barglow {
+  0%, 100% { border-color: hsl(var(--gm-line)); }
+  50%       { border-color: hsl(var(--gm-yellow) / 0.7); }
+}
+@keyframes gm-chippulse {
+  0%, 100% { box-shadow: 0 0 0 3px hsl(46 92% 53% / .45), 0 0 14px 2px hsl(46 92% 53% / .5); }
+  50%       { box-shadow: 0 0 0 6px hsl(46 92% 53% / .18), 0 0 20px 4px hsl(46 92% 53% / .7); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .gm-rc::before,
   .gm-rc__ico .l1,

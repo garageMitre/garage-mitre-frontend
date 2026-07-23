@@ -69,18 +69,18 @@ const onSubmit = async (values: TicketRegistrationForDaySchemaType) => {
   setIsDialogOpen(false);
 };
   return (
-    <div className="text-center mt-8">
+    <div className="text-center">
       <button
         onClick={() => {
           setIsOpen(true);
           setIsDialogOpen(true);
         }}
-        className="group relative inline-flex items-center gap-3 rounded-2xl border border-border/50 bg-card/30 px-6 py-3.5 text-sm font-semibold text-foreground backdrop-blur-xl transition-all duration-300 hover:border-gm-yellow/40 hover:bg-gm-yellow/10 hover:shadow-[0_0_30px_-8px_hsl(var(--gm-yellow)/0.3)]"
+        className="group relative inline-flex h-[52px] items-center gap-3 rounded-2xl border border-gm-line-strong bg-card/40 px-6 text-sm font-semibold uppercase tracking-[0.02em] text-foreground backdrop-blur-xl transition-all duration-300 hover:border-gm-orange/50 hover:bg-gm-orange/10 hover:shadow-[0_8px_24px_-8px_hsl(var(--gm-orange)/0.45)]"
       >
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-gm-yellow/30 bg-gm-yellow/15 text-gm-yellow transition-colors group-hover:bg-gm-yellow/25">
+        <span className="grid size-8 place-items-center rounded-xl border border-gm-orange/30 bg-gm-orange/15 text-[#FF8458] transition-colors group-hover:bg-gm-orange/25">
           <CalendarPlus className="size-4" />
         </span>
-        Crear Ticket Por Día/semana
+        Crear ticket por día o semana
       </button>
 
       <Dialog
