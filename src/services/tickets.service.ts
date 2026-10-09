@@ -14,9 +14,10 @@ import { TicketPriceBracket } from "@/types/ticket-price-bracket.type";
 import { TicketPriceBracketSchemaType, UpdateTicketPriceBracketSchemaType } from "@/schemas/ticket-price-bracket.schema";
 import { AdvancePaymentSchemaType } from "@/schemas/advance-payment.schema";
 import type { TariffDraft, TariffPlan } from "@/types/tariff-plan.type";
-import type { PricingPreviewResult } from "@/types/pricing-options.type";
+import type { PricingOptions, PricingPreviewResult } from "@/types/pricing-options.type";
 
-export type TicketSchedule = { dayStartHour: number; dayEndHour: number; graceMinutes: number; barcodeTicketsEnabled: boolean };
+// pricingOptions/pricingDayTypeBasis los devuelve el backend desde el editor de tarifas.
+export type TicketSchedule = { dayStartHour: number; dayEndHour: number; graceMinutes: number; barcodeTicketsEnabled: boolean; pricingDayTypeBasis?: "ENTRY" | "EXIT"; pricingOptions?: PricingOptions };
 
 
 

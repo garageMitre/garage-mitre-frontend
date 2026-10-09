@@ -26,9 +26,9 @@ import { toast } from 'sonner';
 import { Loader2, Plus } from 'lucide-react';
 import { ticketPriceSchema, TicketPriceSchemaType } from '@/schemas/ticket-price.schema';
 import { createTicketPriceAction } from '@/actions/tickets/create-ticket-price.action';
-import type { VehicleType } from '@/types/ticket-price';
+import type { TicketTimeType, VehicleType } from '@/types/ticket-price';
 
-export function CreateTicketPriceDialog({ defaultVehicleType = 'AUTO' }: { defaultVehicleType?: VehicleType }) {
+export function CreateTicketPriceDialog({ defaultVehicleType = 'AUTO', defaultTimeType = 'SEMANA', compact = false }: { defaultVehicleType?: VehicleType; defaultTimeType?: TicketTimeType; compact?: boolean }) {
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
 
@@ -36,7 +36,7 @@ export function CreateTicketPriceDialog({ defaultVehicleType = 'AUTO' }: { defau
     resolver: zodResolver(ticketPriceSchema),
     defaultValues: {
       vehicleType: defaultVehicleType,
-      ticketTimeType: 'SEMANA',
+      ticketTimeType: defaultTimeType,
       ticketTimePrice: undefined,
     },
   });
@@ -49,7 +49,7 @@ export function CreateTicketPriceDialog({ defaultVehicleType = 'AUTO' }: { defau
         toast.error(errorMessage ?? 'Error desconocido');
       } else {
         toast.success('Tarifa creada exitosamente');
-        form.reset({ vehicleType: defaultVehicleType, ticketTimeType: 'SEMANA', ticketTimePrice: undefined });
+        form.reset({ vehicleType: defaultVehicleType, ticketTimeType: defaultTimeType, ticketTimePrice: undefined });
         setOpen(false);
       }
     });
@@ -58,10 +58,18 @@ export function CreateTicketPriceDialog({ defaultVehicleType = 'AUTO' }: { defau
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" className="h-8 gap-1.5 rounded-md text-[12px] font-semibold" onClick={() => setOpen(true)}>
-          <Plus className="size-3.5" />
-          Nueva tarifa
-        </Button>
+        {compact ? (
+          // Celda vacía de la grilla de precios: se abre ya con el vehículo y la duración de esa celda.
+          <Button size="sm" variant="ghost" className="h-7 gap-1 px-2 text-xs font-medium text-muted-foreground hover:text-foreground" onClick={() => setOpen(true)}>
+            <Plus className="size-3" />
+            Agregar
+          </Button>
+        ) : (
+          <Button size="sm" className="h-8 gap-1.5 rounded-md text-[12px] font-semibold" onClick={() => setOpen(true)}>
+            <Plus className="size-3.5" />
+            Nueva tarifa
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent className="max-w-md sm:max-w-lg">

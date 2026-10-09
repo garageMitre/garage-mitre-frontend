@@ -30,7 +30,7 @@ export function PriceBracketMapDialog({
       </button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-h-[85dvh] w-[calc(100%-2rem)] max-w-6xl overflow-y-auto">
+        <DialogContent className="max-h-[85dvh] w-[calc(100%-2rem)] max-w-2xl overflow-y-auto">
           <DialogTitle className="sr-only">Mapa de tarifas</DialogTitle>
           <DialogDescription className="sr-only">
             Escalera de precios por franja horaria, con la tolerancia entre saltos y la diferencia

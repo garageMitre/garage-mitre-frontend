@@ -12,6 +12,7 @@ import { TariffEditor } from './tariff-editor';
 import { TariffConfirmDialog } from './tariff-confirm-dialog';
 import { TariffSummary } from './tariff-summary';
 import { TariffSimulator } from './tariff-simulator';
+import { TariffCard, TariffCardHeader } from './tariff-ui';
 
 const vehicles = TARIFF_VEHICLES;
 const copyDraft = (plan: TariffPlan): TariffDraft => structuredClone({ schedule: plan.schedule, brackets: plan.brackets });
@@ -100,24 +101,28 @@ export function TariffsBody({ initialPlan, loadError, onDraftChange }: { initial
       }
     });
   };
-  if (!current) return <section className="space-y-3 rounded-xl border p-5"><h2 className="font-semibold">No se pudieron cargar las tarifas</h2><p className="text-sm text-destructive" role="alert">{error || 'Intentá nuevamente.'}</p><Button variant="outline" disabled={pending} onClick={reload}>Volver a intentar</Button></section>;
-  return <div className="space-y-6">
-    <TariffSummary plan={current} vehicles={vehicles} />
-    {!draft && <div className="flex flex-wrap items-center gap-3"><Button onClick={edit} disabled={pending}><Pencil className="mr-2 size-4" aria-hidden="true" />{hasPrices ? 'Editar tarifas' : 'Configurar mis tarifas'}</Button><p className="text-sm text-muted-foreground">Podés probar los cambios antes de aplicarlos.</p></div>}
-    {draft && <section aria-labelledby="tariff-draft-heading" className="space-y-5 rounded-2xl border border-amber-500/40 p-4 sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3"><div><span className="text-xs font-semibold uppercase tracking-wide text-amber-500">Borrador · todavía no se cobra</span><h2 id="tariff-draft-heading" className="mt-1 text-xl font-semibold">Editar tarifas</h2><p className="mt-1 text-sm text-muted-foreground">Todos los cambios se aplican juntos al finalizar.</p></div><Button type="button" variant="ghost" disabled={pending} onClick={discard}><X className="mr-1 size-4" aria-hidden="true" />{dirty ? 'Descartar cambios' : 'Cancelar'}</Button></div>
+  if (!current) return <TariffCard className="space-y-3 p-5"><h2 className="text-base font-semibold">No se pudieron cargar las tarifas</h2><p className="text-sm text-destructive" role="alert">{error || 'Intentá nuevamente.'}</p><Button size="sm" variant="outline" disabled={pending} onClick={reload}>Volver a intentar</Button></TariffCard>;
+  return <div className="space-y-5">
+    <TariffSummary plan={current} vehicles={vehicles} actions={!draft && <Button size="sm" onClick={edit} disabled={pending}><Pencil className="mr-1.5 size-3.5" aria-hidden="true" />{hasPrices ? 'Editar tarifas' : 'Configurar tarifas'}</Button>} />
+    {draft && <TariffCard aria-labelledby="tariff-draft-heading">
+      <TariffCardHeader id="tariff-draft-heading" eyebrow={<span className="inline-flex items-center gap-1.5"><span className="size-1.5 rounded-full bg-gm-yellow" aria-hidden="true" />Borrador · todavía no se cobra</span>} title="Editar tarifas" description="Los cambios se aplican todos juntos." />
       <fieldset disabled={pending} className="min-w-0"><TariffEditor draft={draft} onChange={next => { setDraft(next); setError(''); }} vehicles={vehicles} /></fieldset>
-      {errors.length > 0 && <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm" role="status"><p className="font-medium">Para poder aplicar el borrador:</p><ul className="mt-2 list-disc space-y-1 pl-5">{errors.map(message => <li key={message}>{message}</li>)}</ul></div>}
-    </section>}
+      {errors.length > 0 && <div className="border-t border-border px-5 py-4 text-sm" role="status"><p className="text-xs font-semibold text-foreground">Para poder aplicar</p><ul className="mt-1.5 list-disc space-y-0.5 pl-5 text-xs text-muted-foreground">{errors.map(message => <li key={message}>{message}</li>)}</ul></div>}
+      {conflict && <div role="alert" className="space-y-2 border-t border-border bg-gm-yellow/[0.05] px-5 py-4 text-sm">
+        <p className="font-semibold">Las tarifas cambiaron mientras editabas.</p>
+        <p className="text-muted-foreground">Tu borrador se conserva. Compará con las tarifas vigentes de arriba antes de continuar; si alguien vuelve a modificarlas, te avisamos de nuevo.</p>
+        {current.revision !== baseRevision ? <Button type="button" size="sm" variant="outline" disabled={pending} onClick={() => { setBaseRevision(current.revision); setDraft(previous => previous ? { ...previous, brackets: previous.brackets.map(row => { if (!row.id || current.brackets.some(saved => saved.id === row.id)) return row; const { id: _obsoleteId, ...fields } = row; return fields; }) } : previous); setBaseDraft(JSON.stringify(copyDraft(current))); setConflict(false); setError(''); }}>Revisé la versión vigente: conservar mi borrador</Button> : <Button size="sm" variant="outline" disabled={pending} onClick={reload}>Cargar la versión vigente</Button>}
+      </div>}
+      {error && <p role="alert" className="border-t border-border px-5 py-3 text-sm text-destructive">{error}</p>}
+      <div className="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-b-xl border-t border-border bg-card/95 px-5 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+        <p className="text-xs text-muted-foreground"><span className="font-medium text-foreground">{dirty ? 'Cambios sin aplicar.' : 'Sin cambios todavía.'}</span> Se usan en las salidas desde que apliques, también para los tickets que ya están adentro.</p>
+        <div className="flex items-center gap-2">
+          <Button type="button" size="sm" variant="ghost" disabled={pending} onClick={discard}><X className="mr-1 size-3.5" aria-hidden="true" />{dirty ? 'Descartar' : 'Cancelar'}</Button>
+          <Button type="button" size="sm" onClick={save} disabled={pending || !dirty || errors.length > 0 || conflict}><Save className="mr-1.5 size-3.5" aria-hidden="true" />{pending ? 'Aplicando…' : 'Aplicar tarifas'}</Button>
+        </div>
+      </div>
+    </TariffCard>}
     <TariffSimulator draft={draft} revision={current.revision} invalid={retiredMethod} vehicles={vehicles} />
-    {error && <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">{error}</p>}
-    {conflict && draft && <div role="alert" className="space-y-3 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm"><p className="font-semibold">Las tarifas cambiaron mientras editabas.</p><p>Tu borrador se conserva. Revisá la configuración vigente de arriba y comparala con tu borrador antes de continuar.</p>
-      {current.revision !== baseRevision ? <Button type="button" variant="outline" disabled={pending} onClick={() => { setBaseRevision(current.revision); setDraft(previous => previous ? { ...previous, brackets: previous.brackets.map(row => { if (!row.id || current.brackets.some(saved => saved.id === row.id)) return row; const { id: _obsoleteId, ...fields } = row; return fields; }) } : previous); setBaseDraft(JSON.stringify(copyDraft(current))); setConflict(false); setError(''); }}>Revisé la versión vigente: conservar mi borrador</Button> : <Button variant="outline" disabled={pending} onClick={reload}>Cargar la versión vigente</Button>}
-      <p className="text-xs text-muted-foreground">Luego podrás aplicar tu borrador completo. Si otra persona vuelve a modificar las tarifas, te avisaremos nuevamente.</p></div>}
-    {draft && <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border bg-card p-4">
-      <div><p className="text-sm font-medium">{dirty ? 'Tenés cambios sin aplicar' : 'Todavía no hay cambios'}</p><p className="mt-1 text-xs text-muted-foreground">Se usan en las salidas que se registren desde que las apliques, también para los tickets que ya están adentro.</p></div>
-      <Button type="button" onClick={save} disabled={pending || !dirty || errors.length > 0 || conflict}><Save className="mr-2 size-4" aria-hidden="true" />{pending ? 'Aplicando…' : 'Aplicar tarifas'}</Button>
-    </div>}
     <TariffConfirmDialog open={confirmDiscard} onOpenChange={setConfirmDiscard} title="¿Descartar los cambios?" description="Se perderán los cambios de este borrador. Tus tarifas vigentes se conservan." confirmLabel="Descartar borrador" onConfirm={() => { setDraft(null); setError(''); setConflict(false); }} />
   </div>;
 }

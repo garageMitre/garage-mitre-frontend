@@ -1,350 +1,166 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { AlertTriangle, Car, ChevronRight, Clock, Infinity as InfinityIcon, RotateCcw } from 'lucide-react';
+import { useState } from 'react';
+import { Infinity as InfinityIcon, Moon, RotateCcw, Sun } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TicketPriceBracket } from '@/types/ticket-price-bracket.type';
-import { TicketDayType, VehicleType } from '@/types/ticket-price';
 import { TicketSchedule } from '@/services/tickets.service';
-import {
-  DurationUnit,
-  formatMinutesLabel,
-  formatRecurringUnitLabel,
-  minutesToAmountUnit,
-  resolveRecurringUnitPrice,
-} from '@/utils/ticket-price-bracket.utils';
+import { TARIFF_VEHICLES } from '@/types/tariff-plan.type';
+import { formatRecurringUnitLabel, minutesToAmountUnit, resolveRecurringUnitPrice, type DurationUnit } from '@/utils/ticket-price-bracket.utils';
+import { FactGrid, Segmented, TariffCard } from '../tarifas/tariff-ui';
 
 const TIER_RANK: Record<DurationUnit, number> = { MIN: 0, HOUR: 1, DAY: 2 };
-
-const ars = (n: number) =>
-  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
-
+const ars = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 const pad = (h: number) => `${h.toString().padStart(2, '0')}:00`;
-
-// Mismos colores que la columna "Horario" de la tabla de tarifas (Badge variant "yellow"/"blue"):
-// nada de neón — solo texto/borde en el tono, con un fondo apenas teñido, igual que un badge.
-const PERIOD_ACCENT: Record<TicketDayType, { solid: string; text: string; border: string; tint: string }> = {
-  DAY: { solid: 'hsl(46 92% 53%)', text: 'hsl(46 92% 53%)', border: 'hsl(46 92% 53% / 0.4)', tint: 'hsl(46 92% 53% / 0.12)' },
-  NIGHT: { solid: 'hsl(200 60% 60%)', text: '#8FCDF0', border: 'hsl(200 60% 60% / 0.4)', tint: 'hsl(200 60% 60% / 0.12)' },
+// «1 h 05», «30 min», «2 días»: corto para filas de ejemplo.
+const short = (minutes: number) => {
+  if (minutes % 1440 === 0) return `${minutes / 1440} ${minutes === 1440 ? 'día' : 'días'}`;
+  if (minutes < 60) return `${minutes} min`;
+  const h = Math.floor(minutes / 60), m = minutes % 60;
+  return m ? `${h} h ${String(m).padStart(2, '0')}` : `${h} h`;
 };
-const ORANGE = { text: '#FF8458', border: 'hsl(14 80% 51% / 0.4)', tint: 'hsl(14 80% 51% / 0.12)' };
-const DANGER = { text: '#F08775', border: 'hsl(10 78% 56% / 0.5)', tint: 'hsl(10 78% 56% / 0.14)' };
+const upto = (minutes: number) => 'Hasta ' + short(minutes);
 
-type LoopInfo = {
-  indices: number[];
-  /** true si el reinicio puede terminar cobrando más que la franja de hora a la que se llega —
-   * un vehículo que se queda MENOS tiempo pagaría MÁS que uno que llega a la hora completa. */
-  warning: boolean;
-  cascadeMax: number;
-  coveringPrice: number;
-};
+type Period = 'DAY' | 'NIGHT';
 
-type NodeData = {
-  id: string;
-  index: number;
-  duration: string;
-  price: number;
-  isOpen: boolean;
-  unitLabel?: string;
-  sourceLabel?: string;
-};
-
-export function TicketPriceBracketMap({
-  brackets,
-  schedule,
-  embedded = false,
-}: {
+// Mapa de cómo se cobra un ticket por tiempo, con la configuración vigente. Sigue las mismas
+// reglas que el cálculo del backend (src/tickets/pricing): por hora o fracción, o la lista de
+// duraciones con tolerancia, cascada por escala y regla posterior.
+export function TicketPriceBracketMap({ brackets, schedule, embedded = false }: {
   brackets: TicketPriceBracket[];
   schedule: TicketSchedule;
   /** true cuando se muestra dentro de otro contenedor (ej. un dialog) — omite su propia tarjeta. */
   embedded?: boolean;
 }) {
-  const vehicleTypes = useMemo(
-    () => Array.from(new Set(brackets.map((b) => b.vehicleType))) as VehicleType[],
-    [brackets],
-  );
-  const [vehicleType, setVehicleType] = useState<VehicleType>(vehicleTypes[0] ?? 'AUTO');
-  const [period, setPeriod] = useState<TicketDayType>('DAY');
+  const charging = schedule.pricingOptions?.charging.enabled ? schedule.pricingOptions.charging : null;
+  const codes = [...new Set([...TARIFF_VEHICLES.map(v => v.code), ...brackets.map(b => b.vehicleType), ...(charging?.rates.map(r => r.vehicleType) ?? [])])];
+  const vehicleName = (code: string) => TARIFF_VEHICLES.find(v => v.code === code)?.name ?? code;
+  const [selected, setSelected] = useState(codes[0] ?? 'AUTO');
+  const [periodChoice, setPeriod] = useState<Period>('DAY');
+  const vehicle = codes.includes(selected) ? selected : codes[0] ?? 'AUTO';
+  const hasNight = charging ? charging.rates.some(r => r.dayPrice !== r.nightPrice) : brackets.some(b => b.ticketDayType !== null);
+  const period: Period = hasNight ? periodChoice : 'DAY';
+  const grace = schedule.graceMinutes;
+  const crossing = schedule.pricingOptions?.crossing.enabled ? schedule.pricingOptions.crossing.mode : schedule.pricingDayTypeBasis ?? 'EXIT';
 
-  const effectiveVehicleType = vehicleTypes.includes(vehicleType) ? vehicleType : vehicleTypes[0] ?? 'AUTO';
+  // Una franja de día/noche reemplaza a la general sólo en la misma duración.
+  const scoped = new Map<number | null, TicketPriceBracket>();
+  for (const b of brackets.filter(b => b.vehicleType === vehicle && b.ticketDayType === null)) scoped.set(b.uptoMinutes, b);
+  for (const b of brackets.filter(b => b.vehicleType === vehicle && b.ticketDayType === period)) scoped.set(b.uptoMinutes, b);
+  const finite = [...scoped.values()].filter(b => b.uptoMinutes !== null).sort((a, b) => a.uptoMinutes! - b.uptoMinutes!);
+  const openEnded = scoped.get(null) ?? null;
+  const tier = (b: TicketPriceBracket) => TIER_RANK[minutesToAmountUnit(b.uptoMinutes!).unit];
+  // Entre una franja de horas/días y la siguiente se vuelve a cobrar la lista chica sobre el
+  // excedente (nunca más que la franja siguiente). Devuelve las franjas que se reutilizan.
+  const restartAt = (i: number) => i > 0 && tier(finite[i - 1]) > 0 ? finite.map((b, idx) => ({ b, idx })).filter(({ b }) => tier(b) < tier(finite[i - 1])).map(({ idx }) => idx + 1) : [];
+  const recurring = openEnded?.recurringUnitMinutes
+    ? openEnded.recurringPriceMode === 'FIXED'
+      ? { price: openEnded.price, source: null as string | null }
+      : (() => { const r = resolveRecurringUnitPrice(openEnded.recurringUnitMinutes!, finite, openEnded.id); return { price: r?.price ?? openEnded.price, source: r?.sourceLabel ?? null }; })()
+    : null;
 
-  const pool = brackets.filter(
-    (b) => b.vehicleType === effectiveVehicleType && (b.ticketDayType === null || b.ticketDayType === period),
-  );
-  const finite = [...pool].filter((b) => b.uptoMinutes !== null).sort((a, b) => a.uptoMinutes! - b.uptoMinutes!);
-  const openEnded = pool.find((b) => b.uptoMinutes === null) ?? null;
+  const rate = charging?.rates.find(r => r.vehicleType === vehicle);
+  const unitPrice = rate ? (period === 'DAY' ? rate.dayPrice : rate.nightPrice) : null;
+  const periods = (minutes: number) => !charging ? 0 : charging.mode === 'PROPORTIONAL' ? minutes / charging.unitMinutes : charging.mode === 'COMPLETED' ? Math.floor(minutes / charging.unitMinutes)
+    : minutes > 0 ? Math.max(1, Math.ceil(Math.max(0, minutes - Math.min(grace, charging.unitMinutes - 1)) / charging.unitMinutes)) : 0;
+  const examples = charging ? [...new Set([Math.round(charging.unitMinutes / 2), charging.unitMinutes, charging.unitMinutes + grace, charging.unitMinutes + grace + 1, charging.unitMinutes * 2, charging.unitMinutes * 3, ...(charging.unitMinutes < 1440 ? [1440] : [])])].filter(m => m > 0).sort((a, b) => a - b) : [];
 
-  const nodes: NodeData[] = finite.map((b, i) => ({
-    id: b.id,
-    index: i + 1,
-    duration: formatMinutesLabel(b.uptoMinutes),
-    price: b.price,
-    isOpen: false,
-  }));
+  const facts = [
+    { label: 'Forma de cobro', value: charging ? 'Por hora o fracción' : 'Lista de precios' },
+    { label: 'Día', value: `${pad(schedule.dayStartHour)} – ${pad(schedule.dayEndHour)}` },
+    { label: 'Noche', value: `${pad(schedule.dayEndHour)} – ${pad(schedule.dayStartHour)}` },
+    { label: 'Tolerancia', value: `${grace} min` },
+  ];
 
-  // Misma regla que usa el backend para la cascada (resolveBracketOrCascade): al pasar una
-  // franja de horas/días (+ tolerancia) sin llegar todavía a la siguiente, no salta directo —
-  // vuelve a cobrar la escalera de franjas más chicas (minutos) sobre lo que sobra. Acá marcamos
-  // en qué transición pasa eso, a qué franjas anteriores "vuelve", y si el peor caso del reinicio
-  // (la franja anterior + la más cara de las que reinicia) puede superar el precio de esta franja
-  // de hora — si pasa, alguien que se queda MENOS tiempo pagaría MÁS que la hora completa.
-  const loopBackByIndex: (LoopInfo | null)[] = finite.map((b, i) => {
-    if (i === 0) return null;
-    const prevTier = minutesToAmountUnit(finite[i - 1].uptoMinutes!).unit;
-    if (prevTier === 'MIN') return null;
-    const prevRank = TIER_RANK[prevTier];
-    const smaller = finite
-      .map((sb, idx) => ({ tier: minutesToAmountUnit(sb.uptoMinutes!).unit, idx, price: sb.price }))
-      .filter(({ tier }) => TIER_RANK[tier] < prevRank);
-    if (smaller.length === 0) return null;
-    const cascadeMax = finite[i - 1].price + Math.max(...smaller.map((s) => s.price));
-    return {
-      indices: smaller.map((s) => s.idx + 1),
-      warning: cascadeMax > b.price,
-      cascadeMax,
-      coveringPrice: b.price,
-    };
-  });
-
-  if (openEnded) {
-    let price = openEnded.price;
-    let unitLabel: string | undefined;
-    let sourceLabel: string | undefined;
-    if (openEnded.recurringUnitMinutes) {
-      const resolved = resolveRecurringUnitPrice(openEnded.recurringUnitMinutes, finite, openEnded.id);
-      if (resolved) {
-        price = resolved.price;
-        sourceLabel = resolved.sourceLabel;
-      }
-      unitLabel = formatRecurringUnitLabel(openEnded.recurringUnitMinutes);
-    }
-    nodes.push({
-      id: openEnded.id,
-      index: finite.length + 1,
-      duration: 'Sin límite',
-      price,
-      isOpen: true,
-      unitLabel,
-      sourceLabel,
-    });
-  }
-
-  const accent = PERIOD_ACCENT[period];
-
-  return (
-    <div className={embedded ? '' : 'rounded-2xl border border-border bg-gm-surface-2 p-6 sm:p-8'}>
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h3 className="gm-display text-[22px] font-bold text-foreground">Mapa de tarifas</h3>
-          <p className="mt-1 max-w-[520px] text-[13.5px] text-muted-foreground">
-            En qué orden se van aplicando las franjas, la tolerancia entre saltos, y cómo cambia
-            entre día y noche.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          {vehicleTypes.length > 1 ? (
-            <Select value={effectiveVehicleType} onValueChange={(v) => setVehicleType(v as VehicleType)}>
-              <SelectTrigger className="h-10 w-[150px] text-[13px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {vehicleTypes.map((vt) => (
-                  <SelectItem key={vt} value={vt}>
-                    {vt === 'AUTO' ? 'Auto' : 'Camioneta'}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          ) : (
-            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-gm-surface-3 px-4 py-2.5 text-[13px] font-bold uppercase tracking-[0.04em] text-muted-foreground">
-              <Car className="size-4" />
-              {effectiveVehicleType === 'AUTO' ? 'Auto' : 'Camioneta'}
-            </span>
-          )}
-          <div className="inline-flex items-center gap-1 rounded-full border border-border bg-gm-surface-3 p-1">
-            <button
-              type="button"
-              onClick={() => setPeriod('DAY')}
-              className={cn(
-                'rounded-full px-5 py-2.5 text-[13px] font-bold uppercase tracking-[0.03em] transition-colors',
-                period === 'DAY' ? 'bg-gm-yellow text-gm-ink' : 'text-muted-foreground',
-              )}
-            >
-              Día
-            </button>
-            <button
-              type="button"
-              onClick={() => setPeriod('NIGHT')}
-              className={cn(
-                'rounded-full px-5 py-2.5 text-[13px] font-bold uppercase tracking-[0.03em] transition-colors',
-                period !== 'NIGHT' && 'text-muted-foreground',
-              )}
-              style={period === 'NIGHT' ? { backgroundColor: PERIOD_ACCENT.NIGHT.solid, color: 'hsl(30 78% 7%)' } : undefined}
-            >
-              Noche
-            </button>
-          </div>
-        </div>
+  const content = <>
+    <div className="flex flex-wrap items-start justify-between gap-4">
+      <div>
+        <h3 className="text-lg font-semibold text-foreground">Mapa de tarifas</h3>
+        <p className="mt-0.5 text-sm text-muted-foreground">Cómo se calcula el cobro de un ticket por tiempo.</p>
       </div>
-
-      <div className="mt-5 flex flex-wrap items-center gap-x-7 gap-y-2 rounded-xl border border-border bg-gm-surface-3/60 px-5 py-3.5 text-[13.5px]">
-        <span className="flex items-center gap-2" style={{ color: PERIOD_ACCENT.DAY.text }}>
-          <Clock className="size-4" />
-          Día <strong className="gm-mono text-foreground">{pad(schedule.dayStartHour)} – {pad(schedule.dayEndHour)}</strong>
-        </span>
-        <span className="text-border">·</span>
-        <span className="flex items-center gap-2" style={{ color: PERIOD_ACCENT.NIGHT.text }}>
-          <Clock className="size-4" />
-          Noche <strong className="gm-mono text-foreground">{pad(schedule.dayEndHour)} – {pad(schedule.dayStartHour)}</strong>
-        </span>
-        <span className="text-border">·</span>
-        <span className="flex items-center gap-2" style={{ color: ORANGE.text }}>
-          <Clock className="size-4" />
-          Tolerancia global <strong className="gm-mono text-foreground">{schedule.graceMinutes} min</strong>
-        </span>
+      <div className="flex flex-wrap items-center gap-2">
+        <Segmented label="Vehículo" value={vehicle} onChange={setSelected} options={codes.map(code => ({ value: code, label: vehicleName(code) }))} />
+        {hasNight && <Segmented label="Horario" value={period} onChange={setPeriod} options={[
+          { value: 'DAY', label: 'Día', icon: <Sun className="size-3.5" aria-hidden="true" /> },
+          { value: 'NIGHT', label: 'Noche', icon: <Moon className="size-3.5" aria-hidden="true" /> },
+        ]} />}
       </div>
-
-      {nodes.length === 0 ? (
-        <div className="mt-6 rounded-md border border-dashed border-border bg-gm-surface-3/40 p-10 text-center text-[13.5px] text-muted-foreground">
-          No hay tarifas cargadas para {effectiveVehicleType === 'AUTO' ? 'Auto' : 'Camioneta'} en
-          horario {period === 'DAY' ? 'Día' : 'Noche'}.
-        </div>
-      ) : (
-        <div className="mt-8">
-          <div className="flex flex-wrap items-start justify-center gap-y-8">
-            {nodes.map((node, i) => (
-              <div key={node.id} className="flex items-start">
-                <div className="relative flex w-[132px] shrink-0 flex-col items-center text-center sm:w-[150px]">
-                  <span className="absolute -top-2 left-1.5 z-10 flex size-5 items-center justify-center rounded-full border border-border bg-gm-surface-3 font-mono text-[10.5px] font-bold text-muted-foreground">
-                    {node.index}
-                  </span>
-                  <div
-                    className="mb-3.5 flex size-12 items-center justify-center rounded-full sm:size-14"
-                    style={{
-                      border: `1.5px ${node.isOpen ? 'dashed' : 'solid'} ${node.isOpen ? ORANGE.border : accent.border}`,
-                      background: node.isOpen ? ORANGE.tint : accent.tint,
-                      color: node.isOpen ? ORANGE.text : accent.text,
-                    }}
-                  >
-                    {node.isOpen ? <InfinityIcon className="size-5 sm:size-6" /> : <Clock className="size-5 sm:size-6" />}
-                  </div>
-                  <div className="w-full rounded-[16px] border border-border bg-gm-surface-2 px-2.5 py-3.5">
-                    <div className="text-[11.5px] font-semibold uppercase tracking-[0.03em] text-muted-foreground">
-                      {node.duration}
-                    </div>
-                    <div
-                      className="gm-mono mt-1.5 text-[19px] font-bold leading-tight tabular-nums sm:text-[21px]"
-                      style={{ color: node.isOpen ? ORANGE.text : accent.text }}
-                    >
-                      {ars(node.price)}
-                      {node.unitLabel && (
-                        <span className="ml-1 text-[11.5px] font-normal normal-case text-muted-foreground">
-                          {node.unitLabel}
-                        </span>
-                      )}
-                    </div>
-                    {node.isOpen && node.sourceLabel && (
-                      <div className="mt-1.5 text-[10px] leading-tight text-muted-foreground">
-                        según &quot;{node.sourceLabel}&quot;
-                      </div>
-                    )}
-                  </div>
-                </div>
-                {i < nodes.length - 1 && (
-                  loopBackByIndex[i + 1] ? (
-                    <div className="flex w-[136px] shrink-0 flex-col items-center gap-1.5 pt-7 text-center sm:pt-9">
-                      <span
-                        className="gm-mono whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold"
-                        style={{ borderColor: ORANGE.border, background: ORANGE.tint, color: ORANGE.text }}
-                      >
-                        +{schedule.graceMinutes} min
-                      </span>
-                      <div className="flex items-center gap-1 text-[9.5px] font-semibold" style={{ color: ORANGE.text }}>
-                        <RotateCcw className="size-3" />
-                        reinicia
-                      </div>
-                      <div className="flex items-center gap-[3px]">
-                        {loopBackByIndex[i + 1]!.indices.map((idx, k) => (
-                          <div key={idx} className="flex items-center gap-[3px]">
-                            <span
-                              className="gm-mono flex size-[17px] items-center justify-center rounded-full border text-[9px] font-bold"
-                              style={{ borderColor: ORANGE.border, background: ORANGE.tint, color: ORANGE.text }}
-                            >
-                              {idx}
-                            </span>
-                            {k < loopBackByIndex[i + 1]!.indices.length - 1 && (
-                              <ChevronRight className="size-2.5 opacity-60" style={{ color: ORANGE.text }} />
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                      <span
-                        className="gm-mono whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold"
-                        style={{ borderColor: ORANGE.border, background: ORANGE.tint, color: ORANGE.text }}
-                      >
-                        +{schedule.graceMinutes} min
-                      </span>
-                      {loopBackByIndex[i + 1]!.warning && (
-                        <div
-                          className="flex flex-col items-center gap-0.5 rounded-lg border px-2 py-1.5"
-                          style={{ borderColor: DANGER.border, background: DANGER.tint }}
-                        >
-                          <div className="flex items-center gap-1 text-[9px] font-bold" style={{ color: DANGER.text }}>
-                            <AlertTriangle className="size-3" />
-                            ojo
-                          </div>
-                          <div className="gm-mono text-[9px] leading-tight" style={{ color: DANGER.text }}>
-                            {ars(loopBackByIndex[i + 1]!.cascadeMax)} &gt; {ars(loopBackByIndex[i + 1]!.coveringPrice)}
-                          </div>
-                          <div className="text-[8.5px] leading-tight" style={{ color: DANGER.text }}>
-                            puede cobrar más que {nodes[i + 1].duration.toLowerCase()}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="flex w-[42px] shrink-0 flex-col items-center pt-7 sm:w-[52px] sm:pt-9">
-                      <div className="relative h-[1.5px] w-full opacity-70">
-                        <div
-                          className="absolute inset-0"
-                          style={{
-                            backgroundImage: `repeating-linear-gradient(90deg, ${ORANGE.text} 0 6px, transparent 6px 11px)`,
-                          }}
-                        />
-                        <ChevronRight
-                          className="absolute -right-0.5 -top-[6px] size-3.5"
-                          style={{ color: ORANGE.text }}
-                        />
-                      </div>
-                      <span
-                        className="gm-mono mt-2 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-semibold"
-                        style={{ borderColor: ORANGE.border, background: ORANGE.tint, color: ORANGE.text }}
-                      >
-                        +{schedule.graceMinutes} min
-                      </span>
-                    </div>
-                  )
-                )}
-              </div>
-            ))}
-          </div>
-          {openEnded?.recurringUnitMinutes && (
-            <p className="mt-3 text-center text-[12.5px] italic text-muted-foreground">
-              y sigue sumando {formatRecurringUnitLabel(openEnded.recurringUnitMinutes)}…
-            </p>
-          )}
-        </div>
-      )}
-
-      <p className="mx-auto mt-7 max-w-[820px] text-center text-[13.5px] leading-relaxed text-muted-foreground">
-        Se lee de izquierda a derecha: cada franja cobra según el tiempo transcurrido hasta su
-        &quot;hasta&quot;. Pasarse por menos de la tolerancia todavía <b className="text-foreground">no</b>{' '}
-        hace saltar a la franja siguiente. Donde dice <span className="inline-flex items-center gap-1 align-middle" style={{ color: ORANGE.text }}><RotateCcw className="size-3" />reinicia</span>,
-        si al pasar una franja de horas todavía no se llegó a la siguiente, <b className="text-foreground">no se cobra directo esa franja</b>:
-        se vuelve a cobrar como al principio, franja por franja, sobre el tiempo que sobra. Al
-        agotar la última franja con techo, se pasa a <b className="text-foreground">Sin límite</b>.
-      </p>
     </div>
-  );
+
+    <div className="mt-4 overflow-hidden rounded-xl border border-border">
+      <FactGrid facts={facts} className="border-b border-border" />
+
+      {charging ? unitPrice === null ? <Empty vehicle={vehicleName(vehicle)} /> : <div>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-5 py-4">
+          <span className="text-2xl font-semibold text-foreground gm-tnum">{ars(unitPrice)}</span>
+          <span className="text-sm text-muted-foreground">por cada {short(charging.unitMinutes)}{hasNight ? ` · ${period === 'DAY' ? 'de día' : 'de noche'}` : ''}</span>
+        </div>
+        <table className="w-full border-t border-border">
+          <caption className="sr-only">Ejemplos de cobro</caption>
+          <thead><tr className="border-b border-border">
+            <th scope="col" className="px-5 py-2 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Permanencia</th>
+            <th scope="col" className="px-5 py-2 text-left text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Períodos</th>
+            <th scope="col" className="px-5 py-2 text-right text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Cobro</th>
+          </tr></thead>
+          <tbody>{examples.map(minutes => {
+            const units = periods(minutes);
+            return <tr key={minutes} className="border-b border-border last:border-0">
+              <th scope="row" className="px-5 py-2 text-left text-sm font-medium">{short(minutes)}</th>
+              <td className="px-5 py-2 text-sm text-muted-foreground gm-tnum">{Number(units.toFixed(2))}</td>
+              <td className="px-5 py-2 text-right text-sm font-semibold gm-tnum">{ars(Math.round(units * unitPrice))}</td>
+            </tr>;
+          })}</tbody>
+        </table>
+      </div> : !finite.length && !openEnded ? <Empty vehicle={vehicleName(vehicle)} period={hasNight ? period : undefined} /> : <ol className="px-5 py-3">
+        {finite.map((b, i) => {
+          const next = finite[i + 1] ?? null;
+          const restart = next ? restartAt(i + 1) : [];
+          const isLast = i === finite.length - 1;
+          return <li key={b.id}>
+            <Step index={i + 1} label={upto(b.uptoMinutes!)} price={ars(b.price)} />
+            {(next || openEnded) && <Connector>
+              <span>{next ? `Hasta ${grace} min de tolerancia antes de pasar a la siguiente.` : `Pasada la última duración (+${grace} min), se aplica la regla posterior.`}</span>
+              {restart.length > 0 && <span className="flex items-start gap-1.5"><RotateCcw className="mt-0.5 size-3 shrink-0" aria-hidden="true" />Entre {short(b.uptoMinutes!)} y {short(next!.uptoMinutes!)}: {ars(b.price)} más la lista desde la franja {restart.join(', ')} sobre el excedente, sin superar {ars(next!.price)}.</span>}
+            </Connector>}
+            {isLast && !openEnded && <Connector last><span>Sin regla posterior: pasada esta duración se sigue cobrando {ars(b.price)}.</span></Connector>}
+          </li>;
+        })}
+        {openEnded && <li>
+          <div className="flex items-center gap-3 py-2">
+            <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full border border-dashed border-muted-foreground/50 text-muted-foreground"><InfinityIcon className="size-3.5" /></span>
+            <span className="min-w-0 flex-1 text-sm font-medium text-foreground">
+              {finite.length ? `Después de ${short(finite[finite.length - 1].uptoMinutes!)}` : 'Desde el inicio'}
+              <span className="block text-xs font-normal text-muted-foreground">
+                {recurring ? `Se suma ${formatRecurringUnitLabel(openEnded.recurringUnitMinutes!)}${recurring.source ? ` · según «${recurring.source}»` : ''}` : 'Total fijo por toda la estadía'}
+              </span>
+            </span>
+            <span className="text-sm font-semibold text-foreground gm-tnum">{recurring ? `+ ${ars(recurring.price)}` : ars(openEnded.price)}</span>
+          </div>
+        </li>}
+      </ol>}
+    </div>
+
+    <p className="mt-3 text-xs text-muted-foreground">
+      {charging ? 'Se cobra cada período que empieza, pasada la tolerancia. ' : 'Cada duración cubre hasta su límite; pasarse menos que la tolerancia no cambia el precio. '}
+      {hasNight ? (crossing === 'SPLIT' ? 'Si cruza de día a noche, cada tramo se cobra con su precio.' : `Si cruza de día a noche, se usa el precio de la hora de ${crossing === 'ENTRY' ? 'entrada' : 'salida'}.`) : 'Mismo precio de día y de noche.'}
+    </p>
+  </>;
+
+  return embedded ? <div>{content}</div> : <TariffCard className="p-5">{content}</TariffCard>;
+}
+
+function Step({ index, label, price }: { index: number; label: string; price: string }) {
+  return <div className="flex items-center gap-3 py-2">
+    <span aria-hidden="true" className="flex size-6 shrink-0 items-center justify-center rounded-full border border-border bg-gm-surface-2 text-[11px] font-semibold text-muted-foreground gm-tnum">{index}</span>
+    <span className="min-w-0 flex-1 text-sm font-medium text-foreground">{label}</span>
+    <span className="text-sm font-semibold text-foreground gm-tnum">{price}</span>
+  </div>;
+}
+
+function Connector({ children, last }: { children: React.ReactNode; last?: boolean }) {
+  return <div className={cn('ml-3 flex flex-col gap-1 border-l border-border py-1 pl-6 text-xs text-muted-foreground', last && 'border-dashed')}>{children}</div>;
+}
+
+function Empty({ vehicle, period }: { vehicle: string; period?: Period }) {
+  return <p className="px-5 py-8 text-center text-sm text-muted-foreground">No hay tarifas cargadas para {vehicle}{period ? ` en horario de ${period === 'DAY' ? 'día' : 'noche'}` : ''}.</p>;
 }
