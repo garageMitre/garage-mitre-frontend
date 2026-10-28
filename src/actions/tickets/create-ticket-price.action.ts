@@ -1,7 +1,6 @@
 'use server';
 
 import { ticketPriceSchema, TicketPriceSchemaType } from '@/schemas/ticket-price.schema';
-import { ticketSchema, TicketSchemaType } from '@/schemas/ticket.schema';
 import { createTicketPrice as createTicketPriceAPI } from '@/services/tickets.service';
 import { handleTicketError, TicketError } from './ticket.utility';
 
@@ -12,9 +11,9 @@ export async function createTicketPriceAction(values: TicketPriceSchemaType) {
   }
 
   try {
-    const ticket = await createTicketPriceAPI(validatedFields.data);
+    const ticketPrice = await createTicketPriceAPI(validatedFields.data);
 
-    if (!ticket) {
+    if (!ticketPrice) {
       return {
         error: {
           code: 'SERVER_ERROR',
@@ -23,18 +22,17 @@ export async function createTicketPriceAction(values: TicketPriceSchemaType) {
       };
     }
 
-    if ('error' in ticket) {
-      return { error: handleTicketError(ticket.error as TicketError) };
+    if ('error' in ticketPrice) {
+      return { error: handleTicketError(ticketPrice.error as TicketError) };
     }
 
-    return { success: 'Precio ticket creado exitosamente' };
-  }  catch (error: unknown) {
+    return { success: 'Tarifa creada exitosamente' };
+  } catch (error: unknown) {
     console.error('Error desde el backend:', error);
     return {
       error: {
         code: 'SERVER_ERROR',
-        message:
-          (error as Error)?.message || 'Error inesperado en el servidor.',
+        message: (error as Error)?.message || 'Error inesperado en el servidor.',
       },
     };
   }

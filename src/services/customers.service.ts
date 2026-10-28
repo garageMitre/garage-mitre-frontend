@@ -348,9 +348,14 @@ export const createCustomer = async (
   };
 
     export const findReceipts = async (
+    params?: { from?: string; to?: string },
   ) => {
     try {
-      const response = await fetch(`${BASE_URL}/receipts`, {
+      const search = new URLSearchParams();
+      if (params?.from) search.set('from', params.from);
+      if (params?.to) search.set('to', params.to);
+      const query = search.toString();
+      const response = await fetch(`${BASE_URL}/receipts${query ? `?${query}` : ''}`, {
         headers: {
           "Content-Type": "application/json",
         },

@@ -1,16 +1,34 @@
-export const dynamic = "force-dynamic"
-export const fetchCache = "force-no-store"
-import { getTicketRegistrations } from "@/services/tickets.service";
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
+import {
+  getTicketRegistrations,
+  getTickets,
+  getTicketPriceBrackets,
+  getTicketSchedule,
+  getTicketsRegistrationForDay,
+} from "@/services/tickets.service";
+import { currentUser } from "@/lib/auth";
 import CardTicket from "./components/ticket.card";
 
 export default async function TicketPage() {
   const registrations = await getTicketRegistrations();
+  const ticketsCatalog = await getTickets();
+  const priceBrackets = await getTicketPriceBrackets();
+  const schedule = await getTicketSchedule();
+  const registrationsForDay = await getTicketsRegistrationForDay();
+  const user = await currentUser();
 
   return (
-    <div className="flex flex-col items-center justify-center py-8">
-      <div className="container mx-auto px-4">
-        <CardTicket initialRegistrations={registrations} />
-      </div>
+    <div className="py-2 lg:py-4 short:py-0 short:-my-2">
+      <CardTicket
+        initialRegistrations={registrations}
+        ticketCatalog={ticketsCatalog?.data || []}
+        priceBrackets={priceBrackets || []}
+        schedule={schedule}
+        registrationsForDay={registrationsForDay || []}
+        isAdmin={user?.role === "ADMIN"}
+      />
     </div>
   );
 }

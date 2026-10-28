@@ -61,7 +61,7 @@ export default function UpdateAmountCustomerCard({ className }: { className?: st
     };
 
     return (
-        <Card className={`w-3/5 h-full flex flex-col ${className} mx-auto my-auto justify-center`}>
+        <Card className={`w-full max-w-2xl h-full flex flex-col justify-center mx-auto ${className}`}>
             <CardHeader>
                 <CardTitle>Actualizar Monto Inquilinos</CardTitle>
                 <CardDescription>Elegir tipo de propietario y si el monto va a ser negativo o positivo</CardDescription>

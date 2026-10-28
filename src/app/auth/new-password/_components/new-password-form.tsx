@@ -22,6 +22,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
+import { Eye, EyeOff, KeyRound } from 'lucide-react';
 
 export function NewPasswordForm() {
   const searchParams = useSearchParams();
@@ -29,20 +30,18 @@ export function NewPasswordForm() {
 
   const [error, setError] = useState<string | undefined>();
   const [success, setSuccess] = useState<string | undefined>();
-  const [isPendind, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
+  const [show1, setShow1] = useState(false);
+  const [show2, setShow2] = useState(false);
 
   const form = useForm<NewPasswordSchemaType>({
     resolver: zodResolver(newPasswordSchema),
-    defaultValues: {
-      password: '',
-      confirmPassword: '',
-    },
+    defaultValues: { password: '', confirmPassword: '' },
   });
 
   const onSubmit = (values: NewPasswordSchemaType) => {
     setError(undefined);
     setSuccess(undefined);
-
     startTransition(() => {
       newPasswordAction(values, token).then((data) => {
         setError(data?.error);
@@ -53,54 +52,78 @@ export function NewPasswordForm() {
 
   return (
     <CardWrapper
-      headerLabel="Restablecer contraseña"
-      backButtonLabel="Volvel al inicio de sesión"
+      headerLabel="Elegí una nueva contraseña. Mínimo 8 caracteres con al menos un número."
+      backButtonLabel="← Volver al inicio de sesión"
       backButtonHref="/auth/login"
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nueva contraseña</FormLabel>
-                  <FormControl>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem className="space-y-1.5">
+                <FormLabel>Nueva contraseña</FormLabel>
+                <FormControl>
+                  <div className="relative">
                     <Input
                       {...field}
-                      disabled={isPendind}
-                      type="password"
+                      disabled={isPending}
+                      type={show1 ? 'text' : 'password'}
+                      className="pr-10"
                       placeholder="••••••••"
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Repetir nueva contraseña</FormLabel>
-                  <FormControl>
+                    <button
+                      type="button"
+                      onClick={() => setShow1((s) => !s)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground rounded-sm hover:bg-gm-surface-3"
+                      tabIndex={-1}
+                    >
+                      {show1 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem className="space-y-1.5">
+                <FormLabel>Repetir nueva contraseña</FormLabel>
+                <FormControl>
+                  <div className="relative">
                     <Input
                       {...field}
-                      disabled={isPendind}
-                      type="password"
+                      disabled={isPending}
+                      type={show2 ? 'text' : 'password'}
+                      className="pr-10"
                       placeholder="••••••••"
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                    <button
+                      type="button"
+                      onClick={() => setShow2((s) => !s)}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-muted-foreground hover:text-foreground rounded-sm hover:bg-gm-surface-3"
+                      tabIndex={-1}
+                    >
+                      {show2 ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormError message={error} />
           <FormSuccess message={success} />
-          <Button type="submit" className="w-full" disabled={isPendind}>
-            Enviar
+
+          <Button type="submit" className="w-full" size="lg" disabled={isPending}>
+            <KeyRound className="size-4" />
+            Guardar nueva contraseña
           </Button>
         </form>
       </Form>

@@ -6,15 +6,15 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Note } from '@/types/note.type';
 import { ColumnDef } from '@tanstack/react-table';
-import { BadgeCheckIcon, BadgeXIcon, MoreHorizontal } from 'lucide-react';
+import { MoreHorizontal, StickyNote, User } from 'lucide-react';
 import { UpdateNoteDialog } from './update-note-dialog';
 import { DeleteNoteDialog } from './delete-note-dialog';
 import { ViewNoteDialog } from './view-note-dialog';
-
 
 export const noteColumns: ColumnDef<Note>[] = [
   {
@@ -23,7 +23,9 @@ export const noteColumns: ColumnDef<Note>[] = [
       <DataTableColumnHeader column={column} title="Fecha" />
     ),
     cell: ({ row }) => (
-      <div className="min-w-[100px] text-sm">{row.getValue('date')}</div>
+      <span className="gm-mono gm-tnum text-[12.5px] font-semibold text-foreground">
+        {row.getValue('date')}
+      </span>
     ),
   },
   {
@@ -32,7 +34,9 @@ export const noteColumns: ColumnDef<Note>[] = [
       <DataTableColumnHeader column={column} title="Horario" />
     ),
     cell: ({ row }) => (
-      <div className="min-w-[100px] text-sm">{row.getValue('hours')}</div>
+      <span className="gm-mono gm-tnum text-[12.5px] text-muted-foreground">
+        {row.getValue('hours')}
+      </span>
     ),
   },
   {
@@ -41,9 +45,14 @@ export const noteColumns: ColumnDef<Note>[] = [
       <DataTableColumnHeader column={column} title="Descripción" />
     ),
     cell: ({ row }) => {
-      const description = row.getValue('description') as string; // Aseguramos que description es de tipo string
-      const truncatedDescription = description.length > 3 ? description.slice(0, 3) + "..." : description;
-      return <div className="min-w-[100px] text-sm">{truncatedDescription}</div>;
+      const desc = row.getValue('description') as string;
+      const truncated = desc.length > 80 ? desc.slice(0, 80) + '…' : desc;
+      return (
+        <div className="flex items-start gap-2 min-w-[300px] max-w-[480px]">
+          <StickyNote className="size-3.5 mt-0.5 text-gm-yellow shrink-0" />
+          <span className="text-[13px] text-foreground">{truncated}</span>
+        </div>
+      );
     },
   },
   {
@@ -53,30 +62,38 @@ export const noteColumns: ColumnDef<Note>[] = [
       <DataTableColumnHeader column={column} title="Usuario" />
     ),
     cell: ({ row }) => (
-      <div className="min-w-[100] text-sm">{row.original.user?.email}</div>
+      <div className="flex items-center gap-2 text-[12px] text-muted-foreground">
+        <User className="size-3.5" />
+        {row.original.user?.email}
+      </div>
     ),
   },
   {
     id: 'actions',
     cell: ({ row }) => {
       const note = row.original;
-
-      return  (
+      return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
+            <Button variant="ghost" size="icon" className="size-8">
+              <span className="sr-only">Abrir acciones</span>
+              <MoreHorizontal className="size-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-[160px]">
-            <DropdownMenuLabel className="text-sm">Acciones</DropdownMenuLabel>
-            <ViewNoteDialog note={note}/>
+          <DropdownMenuContent
+            align="end"
+            className="w-56 border border-border bg-gm-surface p-1 shadow-[0_20px_60px_-10px_rgba(0,0,0,0.7)]"
+          >
+            <DropdownMenuLabel className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+              Acciones
+            </DropdownMenuLabel>
+            <ViewNoteDialog note={note} />
             <UpdateNoteDialog note={note} />
+            <DropdownMenuSeparator className="bg-border" />
             <DeleteNoteDialog note={note} />
           </DropdownMenuContent>
         </DropdownMenu>
-      )
+      );
     },
   },
 ];

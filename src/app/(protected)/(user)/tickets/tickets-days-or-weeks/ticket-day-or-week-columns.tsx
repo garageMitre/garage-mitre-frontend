@@ -71,6 +71,15 @@ export const ticketDayOrWeekColumns: ColumnDef<TicketRegistrationForDay>[] = [
       <div className="min-w-[50px] text-sm text-center">{row.getValue('days')?? 0}</div>
     ),
   },
+      {
+    accessorKey: 'months',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Mes/es" />
+    ),
+    cell: ({ row }) => (
+      <div className="min-w-[50px] text-sm text-center">{row.getValue('months') ?? 0}</div>
+    ),
+  },
     {
     accessorKey: 'vehicleType',
     header: ({ column }) => (

@@ -15,7 +15,7 @@ export default async function UserLayout({
   return (
           <SidebarProvider defaultOpen={defaultOpen}>
             <AppNavbar>
-              <div className="flex flex-col flex-1 overflow-y-auto">
+              <div className="gm-page-glow flex flex-col flex-1 overflow-y-auto">
                 <main className="container mx-auto px-6 py-6">{children}</main>
               </div>
             </AppNavbar>

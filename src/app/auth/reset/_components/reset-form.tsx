@@ -21,24 +21,21 @@ import {
   resetPasswordSchema,
   ResetPasswordSchemaType,
 } from '@/schemas/auth/reset-password.schema';
-import Link from 'next/link';
+import { Mail, Send } from 'lucide-react';
 
 export function ResetForm() {
   const [error, setError] = useState<string | undefined>('');
   const [success, setSuccess] = useState<string | undefined>('');
-  const [isPendind, startTransition] = useTransition();
+  const [isPending, startTransition] = useTransition();
 
   const form = useForm<ResetPasswordSchemaType>({
     resolver: zodResolver(resetPasswordSchema),
-    defaultValues: {
-      email: '',
-    },
+    defaultValues: { email: '' },
   });
 
   const onSubmit = (values: ResetPasswordSchemaType) => {
     setError(undefined);
     setSuccess(undefined);
-
     startTransition(() => {
       resetPasswordAction(values).then((data) => {
         setError(data?.error);
@@ -49,31 +46,41 @@ export function ResetForm() {
 
   return (
     <CardWrapper
-      headerLabel="Olvidaste tu contraseña?"
-      backButtonLabel="Volver al inicio de sesión"
+      headerLabel="Te enviamos un link al email para que puedas crear una nueva contraseña."
+      backButtonLabel="← Volver al inicio de sesión"
       backButtonHref="/auth/login"
     >
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input {...field} disabled={isPendind} type="email" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem className="space-y-1.5">
+                <FormLabel>Email</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+                    <Input
+                      {...field}
+                      disabled={isPending}
+                      type="email"
+                      className="pl-9"
+                      placeholder="juan.castro@garagemitre.ar"
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormError message={error} />
           <FormSuccess message={success} />
-          <Button type="submit" className="w-full" disabled={isPendind}>
-            <Link href="">Enviar email de recuperación</Link>
+
+          <Button type="submit" className="w-full" size="lg" disabled={isPending}>
+            <Send className="size-4" />
+            Enviar email de recuperación
           </Button>
         </form>
       </Form>

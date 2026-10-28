@@ -4,17 +4,15 @@ import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Customer } from '@/types/cutomer.type';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Eye, StickyNote, User } from 'lucide-react';
 import { Note } from '@/types/note.type';
-import { Separator } from '@/components/ui/separator';
-
 
 export function ViewNoteDialog({ note }: { note: Note }) {
   const [open, setOpen] = useState(false);
@@ -22,33 +20,59 @@ export function ViewNoteDialog({ note }: { note: Note }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start" size="sm">
-          Ver Detalles
+        <Button variant="ghost" size="sm" className="w-full justify-start">
+          <Eye className="size-4" />
+          Ver detalles
         </Button>
       </DialogTrigger>
-  
-      <DialogContent className="max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-full max-w-lg sm:max-w-xl">
-        <DialogHeader className="items-center">
-          <DialogTitle>Aviso</DialogTitle>
+
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-md border border-gm-yellow/40 bg-gm-yellow/15 text-gm-yellow">
+              <StickyNote className="size-4" />
+            </span>
+            <div>
+              <DialogTitle>Aviso</DialogTitle>
+              <DialogDescription className="mt-0.5">
+                Detalle del aviso interno.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <Card className="p-4 space-y-3 text-sm sm:text-base w-full max-h-[80vh] overflow-y-auto">
-          <CardContent className="p-4 space-y-3 text-sm sm:text-base w-full max-h-[20vh] overflow-y-auto">
-            <p className="break-words">{note.description}</p>
-          </CardContent>
-        </Card>
-  
-        <p><strong>Fecha:</strong> {note.date}</p>
-        <p><strong>Creado por:</strong> {note.user.email}</p>
-  
-        {/* Botón de Cerrar */}
-        <div className="flex justify-end mt-4">
-          <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
+        <article className="rounded-md border border-border bg-gm-surface-2 p-4">
+          <p className="whitespace-pre-wrap break-words text-[14px] leading-relaxed text-foreground">
+            {note.description}
+          </p>
+        </article>
+
+        <dl className="grid grid-cols-2 gap-3 text-[12.5px]">
+          <div className="rounded-md border border-border bg-gm-surface-2 p-3">
+            <dt className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              Fecha
+            </dt>
+            <dd className="gm-mono mt-0.5 font-semibold text-foreground">
+              {note.date}
+            </dd>
+          </div>
+          <div className="rounded-md border border-border bg-gm-surface-2 p-3">
+            <dt className="text-[10px] font-bold uppercase tracking-[0.08em] text-muted-foreground">
+              Creado por
+            </dt>
+            <dd className="mt-0.5 flex items-center gap-1.5 text-foreground">
+              <User className="size-3.5 text-muted-foreground" />
+              {note.user.email}
+            </dd>
+          </div>
+        </dl>
+
+        <DialogFooter>
+          <Button variant="ghost" onClick={() => setOpen(false)}>
             Cerrar
           </Button>
-        </div>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
-  
 }

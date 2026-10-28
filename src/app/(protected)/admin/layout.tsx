@@ -16,7 +16,7 @@ export default async function AdminLayout({
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
       <AppNavbar adminSidebar={<AdminNavbarSidebar/>} userSidebar={<UserNavbarSidebar/>}>
-      <div className="flex flex-col flex-1 h-full">
+      <div className="gm-page-glow flex flex-col flex-1 h-full">
           <main className="container mx-auto px-6 py-6">{children}</main>
         </div>
       </AppNavbar>

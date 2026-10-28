@@ -1,23 +1,15 @@
-'use client'
+'use client';
 
 import {
-  CreditCardIcon,
-  HandCoins,
-  Home,
-  HelpCircle,
-  User2,
-  Scale,
-  BarChart,
-  UserCheck,
   ArrowLeft,
-  Globe,
-  User,
-  Wallet,
   Banknote,
+  DollarSign,
+  LayoutDashboard,
   ParkingCircle,
+  Shield,
   Ticket,
-  DollarSignIcon,
-} from 'lucide-react'
+  User,
+} from 'lucide-react';
 
 import {
   Sidebar,
@@ -25,44 +17,66 @@ import {
   SidebarHeader,
   SidebarTrigger,
   SidebarRail,
-} from '@/components/ui/sidebar'
-import { NavMain } from './nav-main'
-import { useSession } from 'next-auth/react'
+  SidebarFooter,
+} from '@/components/ui/sidebar';
+import { NavMain } from './nav-main';
+import { useSession } from 'next-auth/react';
 
 export function AdminNavbarSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar>) {
-  const { data: session } = useSession()
-  const role = session?.user?.role?.toUpperCase() ?? 'USER'
-  const isAdmin = role === 'ADMIN'
+  const { data: session } = useSession();
+  const role = session?.user?.role?.toUpperCase() ?? 'USER';
+  const isAdmin = role === 'ADMIN';
 
   const allNavItems = [
-    { title: 'Usuarios', url: '/admin/users', icon: <User /> },
-    { title: 'Tickets', url: '/admin/tickets', icon: <Ticket /> },
-    { title: 'Tipo de Estacionamiento', url: '/admin/parking-type', icon: <ParkingCircle /> },
-    { title: 'Actualizar Montos', url: '/admin/update-amount-customers', icon: <DollarSignIcon /> },
-    { title: 'Varios', url: '/admin/other-payments', icon: <Banknote /> },
-    { title: 'Volver', url: '/tickets', icon: <ArrowLeft /> },
-  ]
+    { title: 'Usuarios',                url: '/admin/users',                  icon: <User /> },
+    { title: 'Dashboard',               url: '/admin/dashboard',              icon: <LayoutDashboard /> },
+    { title: 'Tickets / Precios',       url: '/admin/tickets',                icon: <Ticket /> },
+    { title: 'Tipo de Estacionamiento', url: '/admin/parking-type',           icon: <ParkingCircle /> },
+    { title: 'Actualizar Montos',       url: '/admin/update-amount-customers', icon: <DollarSign /> },
+    { title: 'Varios',                  url: '/admin/other-payments',         icon: <Banknote /> },
+    { title: 'Volver',                  url: '/tickets',                       icon: <ArrowLeft /> },
+  ];
 
-  // 👇 Si no es admin, solo mostramos los dos últimos
-  const navItems = isAdmin ? allNavItems : allNavItems.slice(-2)
+  const navItems = isAdmin ? allNavItems : allNavItems.slice(-2);
 
   return (
     <Sidebar
       collapsible="icon"
-      className="group/sidebar border-r bg-gradient-to-b from-background to-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60"
+      className="group/sidebar border-r border-border bg-gm-surface"
       {...props}
     >
-      <SidebarHeader className="h-14 border-b flex justify-center items-center bg-gradient-to-r from-background to-background/95">
-        <SidebarTrigger className="h-9 w-9 rounded-lg hover:bg-gradient-to-r hover:from-primary/20 hover:to-primary/10 hover:text-white transition-all duration-200" />
+      {/* Stripe that continues from the topbar */}
+      <div className="gm-stripes h-[3px] w-full shrink-0" aria-hidden />
+
+      <SidebarHeader className="h-16 border-b border-border bg-gm-surface flex items-center justify-center px-2">
+        <SidebarTrigger className="h-8 w-8 rounded-md hover:bg-gm-surface-2 hover:text-foreground" />
       </SidebarHeader>
 
-      <SidebarContent className="py-1 bg-gradient-to-r from-background to-background/95">
+      <div className="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.12em] text-muted-foreground group-data-[collapsible=icon]:hidden">
+        Administración
+      </div>
+
+      <SidebarContent className="bg-gm-surface px-1 py-1">
         <NavMain items={navItems} />
       </SidebarContent>
 
-      <SidebarRail className="after:bg-border after:opacity-50 hover:after:opacity-100 after:transition-opacity" />
+      <SidebarFooter className="border-t border-border bg-gm-surface p-2 group-data-[collapsible=icon]:p-1.5">
+        <div className="group-data-[collapsible=icon]:hidden rounded-md bg-gm-surface-2 border border-border px-3 py-2">
+          <div className="text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
+            Modo
+          </div>
+          <div className="gm-display mt-0.5 text-[12px] font-bold text-gm-yellow">
+            Administrador
+          </div>
+        </div>
+        <div className="hidden group-data-[collapsible=icon]:flex items-center justify-center py-0.5">
+          <Shield className="size-4 text-gm-yellow" />
+        </div>
+      </SidebarFooter>
+
+      <SidebarRail />
     </Sidebar>
-  )
+  );
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
+import { Badge } from '@/components/ui/badge';
 import {
   Sheet,
   SheetContent,
@@ -11,7 +11,15 @@ import {
   SheetTrigger,
 } from '@/components/ui/sheet';
 import { useNotificationsInterest } from '@/hooks/use-notification-interest';
-import { AlertCircle, Bell, BellRing, MessageCircleWarning, X } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  Bell,
+  BellRing,
+  CircleDollarSign,
+  Trash2,
+  X,
+} from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
@@ -20,102 +28,124 @@ export function NotificationSidebar() {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
 
-  const { notifications, clearNotifications, removeNotification } = useNotificationsInterest();
+  const { notifications, clearNotifications, removeNotification } =
+    useNotificationsInterest();
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
+  useEffect(() => setMounted(true), []);
   if (!mounted) return null;
+
+  const count = notifications.length;
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" className="relative" onClick={() => setIsOpen(true)}>
-          {notifications.length > 0 ? (
+        <Button variant="ghost" size="icon" className="relative size-10">
+          {count > 0 ? (
             <>
-            <BellRing className="w-7 h-7 text-red-500" />
-            <span className="absolute -top-1 right-0 p-1 bg-red-500 text-white text-xs font-bold w-4 h-4 flex items-center justify-center rounded-full">
-              {notifications.length}
-            </span>
-          </>
-          ):(
-            <Bell className="w-7 h-7" />
+              <BellRing className="size-5 text-[#FF8458]" />
+              <span className="absolute -top-0.5 -right-0.5 grid size-5 place-items-center rounded-full bg-gm-orange text-[10px] font-bold text-white ring-2 ring-gm-surface">
+                {count}
+              </span>
+            </>
+          ) : (
+            <Bell className="size-5" />
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="flex flex-col">
-  <SheetHeader className="">
-    <SheetTitle>Notificaciones</SheetTitle>
-    <SheetDescription>
-      Acá se le notificará los intereses aplicados a los clientes los días 10, 20 y último día de cada mes.
-    </SheetDescription>
-  </SheetHeader>
 
-  {notifications.length > 0 && (
-    <div className="flex justify-end pr-2">
-      <Button
-        size="sm"
-        variant="destructive"
-        className="bg-transparent text-red-600 hover:bg-transparent"
-        onClick={clearNotifications}
-      >
-        Limpiar
-      </Button>
-    </div>
-  )}
-  <Separator />
+      <SheetContent className="flex w-[400px] flex-col border-l border-border bg-gm-surface p-0 sm:w-[440px]">
+        <SheetHeader className="border-b border-border px-5 py-4 space-y-1.5">
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-md border border-gm-orange/40 bg-gm-orange/15 text-[#FF8458]">
+              <CircleDollarSign className="size-4" />
+            </span>
+            <div className="flex-1">
+              <SheetTitle className="gm-display text-lg font-bold tracking-[0.02em]">
+                Intereses aplicados
+              </SheetTitle>
+              <SheetDescription className="text-[12px] text-muted-foreground">
+                Días 10, 20 y último de cada mes — clientes con deuda.
+              </SheetDescription>
+            </div>
+            {count > 0 && (
+              <Badge variant="orange">{count}</Badge>
+            )}
+          </div>
 
+          {count > 0 && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="self-end text-[#F08775] hover:text-[#F08775] hover:bg-destructive/15"
+              onClick={clearNotifications}
+            >
+              <Trash2 className="size-3.5" />
+              Limpiar todo
+            </Button>
+          )}
+        </SheetHeader>
 
-  {notifications.length === 0 && (
-    <div className="p-4 text-sm text-gray-500">No hay Notificaciones</div>
-  )}
+        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-2">
+          {count === 0 && (
+            <div className="flex flex-col items-center justify-center gap-2 py-16 text-center text-muted-foreground">
+              <Bell className="size-8 opacity-50" />
+              <p className="text-[13px]">No hay notificaciones por ahora.</p>
+            </div>
+          )}
 
-  {/* Scrollable content */}
-  <div className="flex-1 overflow-y-auto mt-2 pr-2">
-  {notifications.map((notification) => (
-  <div key={notification.id} className="relative p-2">
-    {/* Botón de cerrar arriba a la derecha */}
-    <Button
-      className="absolute top-2 right-2 bg-transparent hover:text-red-600 hover:bg-transparent h-4 w-4 p-0"
-      onClick={() => removeNotification(notification.id)}
-    >
-      <X className="h-4 w-4" />
-    </Button>
+          {notifications.map((notification) => (
+            <article
+              key={notification.id}
+              className="rounded-md border border-border bg-gm-surface-2 p-3 relative"
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-1 right-1 size-7 text-muted-foreground hover:text-foreground"
+                onClick={() => removeNotification(notification.id)}
+              >
+                <X className="size-3.5" />
+              </Button>
 
-    <p className="font-semibold mb-2 pr-5">{notification.title}</p>
-    <p className="text-sm text-gray-500 pr-5">{notification.message}</p>
+              <div className="flex items-start gap-2.5 pr-7">
+                <AlertTriangle className="size-4 mt-0.5 text-[#FF8458] shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-[13px] font-semibold text-foreground">
+                    {notification.title}
+                  </h4>
+                  <p className="mt-1 text-[12px] text-muted-foreground leading-relaxed">
+                    {notification.message}
+                  </p>
+                </div>
+              </div>
 
-    <div className="mt-2 flex justify-end">
-    <Button
-      onClick={() => {
-        removeNotification(notification.id);
-
-        const typeMap: Record<string, string> = {
-          OWNER: 'owners',
-          RENTER: 'renters',
-          PRIVATE: 'privates',
-        };
-
-        const routeType = typeMap[notification.customerType]; // valor por defecto
-
-        router.push(`/${routeType}?lastName=${notification.lastName}&showSummary=true`);
-        setIsOpen(false);
-      }}
-      className="bg-transparent hover:bg-transparent hover:text-white text-sm"
-    >
-      Ir a detalle
-    </Button>
-
-    </div>
-
-    <Separator className="mt-2" />
-  </div>
-))}
-
-  </div>
-</SheetContent>
-
+              <div className="mt-3 flex justify-end">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-[12px] text-gm-yellow hover:text-gm-yellow hover:bg-gm-yellow/10"
+                  onClick={() => {
+                    removeNotification(notification.id);
+                    const typeMap: Record<string, string> = {
+                      OWNER:   'owners',
+                      RENTER:  'renters',
+                      PRIVATE: 'privates',
+                    };
+                    const routeType = typeMap[notification.customerType];
+                    router.push(
+                      `/${routeType}?lastName=${notification.lastName}&showSummary=true`,
+                    );
+                    setIsOpen(false);
+                  }}
+                >
+                  Ir al detalle
+                  <ArrowRight className="size-3.5" />
+                </Button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </SheetContent>
     </Sheet>
   );
 }

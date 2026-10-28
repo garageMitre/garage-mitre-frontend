@@ -1,152 +1,50 @@
 'use client';
 
-import {
-  ColumnDef,
-  ColumnFiltersState,
-  flexRender,
-  getCoreRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-} from '@tanstack/react-table';
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { DataTablePagination } from '@/components/ui/data-table-pagination';
-import { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
-import { DataTableViewOptions } from '@/components/ui/data-table-view-options';
-import { CreateOwnerDialog } from './create-owner-dialog';
-import { useSession } from 'next-auth/react';
-import { ParkingType } from '@/types/parking-type';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
+import { ColumnDef } from '@tanstack/react-table';
 
+import { ParkingType } from '@/types/parking-type';
+import { Customer } from '@/types/cutomer.type';
+import { DataTableShell } from '@/components/data-table-shell';
+import { CreateOwnerDialog } from './create-owner-dialog';
+import { CustomerInlineDetail } from '../../components/receipts/customer-inline-detail';
+import { CustomerPageTour } from '../../components/customer-page-tour';
 
+interface OwnersTableProps {
+  columns: (parkingTypes: ParkingType[]) => ColumnDef<Customer>[];
+  data: Customer[];
+  parkingTypes: ParkingType[];
+}
 
-interface DataTableProps<TData, TValue> {
-    columns: (parkingTypes: ParkingType[]) => ColumnDef<TData, TValue>[];
-    data: TData[];
-    parkingTypes: ParkingType[];
-  }
-
-export function OwnersTable<TData, TValue>({
-  columns,
-  data,
-  parkingTypes
-}: DataTableProps<TData, TValue>) {
+export function OwnersTable({ columns, data, parkingTypes }: OwnersTableProps) {
   const searchParams = useSearchParams();
   const lastNameQuery = searchParams.get('lastName') || '';
-  const [sorting, setSorting] = useState<SortingState>([
-    { id: 'lastName', desc: false }, // Ordenamiento ascendente por apellido (lastName)
-  ]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(
-    lastNameQuery ? [{ id: 'lastName', value: lastNameQuery }] : []
-  );
+  const customerIdQuery = searchParams.get('customerId') || undefined;
   const session = useSession();
-  
-
-  const table = useReactTable({
-    data,
-    columns: columns(parkingTypes),
-    getCoreRowModel: getCoreRowModel(),
-    onColumnFiltersChange: setColumnFilters,
-    getFilteredRowModel: getFilteredRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    onSortingChange: setSorting,
-    getSortedRowModel: getSortedRowModel(),
-    state: {
-      columnFilters,
-      sorting,
-    },
-    initialState: {
-      pagination: {
-        pageSize: 10,
-      },
-      sorting: [{ id: 'lastName', desc: false }],
-    },
-    autoResetPageIndex: false,
-  });
+  const isAdmin = session.data?.user.role === 'ADMIN';
 
   return (
-    <div className="flex flex-col space-y-4 sm:space-y-6 pt-4">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-0">
-        <Input
-          placeholder="Filtrar por apellido..."
-          value={(table.getColumn('lastName')?.getFilterValue() as string) ?? ''}
-          onChange={(event) =>
-            table.getColumn('lastName')?.setFilterValue(event.target.value)
-          }
-          className="w-full sm:max-w-sm rounded-xl bg-secondary border-white"
-        />
-
-        <div className="flex items-center justify-between sm:justify-end gap-4 sm:flex-1">
-          <DataTableViewOptions table={table} />
-          {session.data?.user.role === 'ADMIN' && (
-              <>
-              < CreateOwnerDialog/>
-              </>
-            )}     
+    <DataTableShell
+      data={data}
+      columns={columns(parkingTypes)}
+      filterColumn="lastName"
+      filterPlaceholder="Filtrar por apellido..."
+      initialFilter={lastNameQuery}
+      initialSort={[{ id: 'lastName', desc: false }]}
+      getRowId={(customer) => customer.id}
+      initialExpandedId={customerIdQuery}
+      toolbarRight={
+        <div className="flex items-center gap-2">
+          <CustomerPageTour entityLabel="propietario" />
+          {isAdmin && (
+            <div data-tour="customer-create">
+              <CreateOwnerDialog />
+            </div>
+          )}
         </div>
-      </div>
-      <div className="rounded-xl border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} className="whitespace-nowrap">
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id} className="whitespace-nowrap">
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext(),
-                      )}
-                    </TableCell>
-                  ))}
-                </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={table.getVisibleFlatColumns().length}
-                  className="h-24 w-full text-center text-sm sm:text-base"
-                >
-                  No hay resultados para mostrar.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <DataTablePagination table={table} />
-    </div>
+      }
+      renderSubComponent={(row) => <CustomerInlineDetail customer={row.original} />}
+    />
   );
 }

@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -24,10 +25,9 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { ticketSchema, TicketSchemaType } from '@/schemas/ticket.schema';
 import { createTicketAction } from '@/actions/tickets/create-ticket.action';
+import { Loader2, Plus, Ticket as TicketIcon } from 'lucide-react';
 
 export function CreateTicketDialog() {
-  const [error, setError] = useState<string | undefined>('');
-  const [success, setSuccess] = useState<string | undefined>('');
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
 
@@ -41,21 +41,20 @@ export function CreateTicketDialog() {
   });
 
   const onSubmit = (values: TicketSchemaType) => {
-    setError(undefined);
-    setSuccess(undefined);
-
     startTransition(() => {
       createTicketAction(values)
         .then((data) => {
-          setError(data.error);
-          setSuccess(data.success);
+          if (data.error) {
+            toast.error(data.error);
+            return;
+          }
           toast.success('Ticket creado exitosamente');
-          setOpen(false)
+          form.reset();
+          setOpen(false);
         })
         .catch((error) => {
           console.error(error);
-          setError('Error al crear ticket');
-          toast.error(error);
+          toast.error('Error al crear ticket');
         });
     });
   };
@@ -63,14 +62,25 @@ export function CreateTicketDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" onClick={() => setOpen(true)}>
-          Crear Ticket
+        <Button size="sm" className="h-8 gap-1.5 rounded-md text-[12px] font-semibold">
+          <Plus className="size-3.5" />
+          Crear ticket
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-full max-w-md sm:max-w-lg">
-        <DialogHeader className="items-center">
-          <DialogTitle>Crear Ticket</DialogTitle>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <span className="grid size-9 place-items-center rounded-md border border-gm-yellow/40 bg-gm-yellow/15 text-gm-yellow">
+              <TicketIcon className="size-4" />
+            </span>
+            <div>
+              <DialogTitle>Crear ticket</DialogTitle>
+              <DialogDescription className="mt-0.5">
+                Registrá un nuevo código de barras.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -113,7 +123,7 @@ export function CreateTicketDialog() {
               )}
             />
 
-                        <FormField
+            <FormField
               control={form.control}
               name="ticketDayType"
               render={({ field }) => (
@@ -129,7 +139,7 @@ export function CreateTicketDialog() {
                         <SelectValue placeholder="Selecciona un tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="DAY">Dia</SelectItem>
+                        <SelectItem value="DAY">Día</SelectItem>
                         <SelectItem value="NIGHT">Noche</SelectItem>
                       </SelectContent>
                     </Select>
@@ -140,7 +150,8 @@ export function CreateTicketDialog() {
             />
 
             <Button className="w-full" type="submit" disabled={isPending}>
-              Crear Ticket
+              {isPending ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
+              Crear ticket
             </Button>
           </form>
         </Form>

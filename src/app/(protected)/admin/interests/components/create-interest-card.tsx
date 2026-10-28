@@ -56,7 +56,7 @@ export default function CardInterest({ className, interests }: { className?: str
     };
 
     return (
-        <Card className={`w-3/5 h-full flex flex-col ${className} mx-auto my-auto flex justify-center`}>
+        <Card className={`w-full max-w-2xl h-full flex flex-col justify-center mx-auto ${className}`}>
             <CardHeader>
                 <CardTitle>Gestionar intereses de los inquilinos y propietarios</CardTitle>
                 <CardDescription>El número de intereses que escribas se suma cada 10 días. El interes se aplica a los clientes que se excedan de los 10 dias despues del dia 1 de cada mes.</CardDescription>

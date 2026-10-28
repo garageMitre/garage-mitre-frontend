@@ -13,7 +13,7 @@ export async function loginAction(
     const validatedFields = loginSchema.safeParse(values);
 
     if (!validatedFields.success) {
-      return { error: 'Campos inválidos' };
+      return { error: 'Revisá los campos e intentá de nuevo.' };
     }
 
     const { identifier, password } = validatedFields.data;
@@ -23,7 +23,7 @@ export async function loginAction(
 
 
     if (!existingUserByEmail && !existingUserByUserName) {
-      return { error: 'El email o usuario no está registrado' };
+      return { error: 'No se encontró una cuenta con ese email o usuario.' };
     }
       await signIn('credentials', {
         identifier,
@@ -31,18 +31,18 @@ export async function loginAction(
         redirect: false,
       });
 
-      return { success: "Inicio de sesión exitoso.", redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT };
-    }catch (error: unknown) {
+      return { success: "Sesión iniciada — redirigiendo.", redirectTo: callbackUrl || DEFAULT_LOGIN_REDIRECT };
+    } catch (error: unknown) {
       console.error("Error en signIn:", error);
-    
+
       if (typeof error === "object" && error !== null && "type" in error) {
         const typedError = error as { type: string };
         if (typedError.type === "CredentialsSignin") {
           return { error: "Email o contraseña incorrectos" };
         }
       }
-    
-      return { error: "Algo salió mal. Intenta de nuevo." };
+
+      return { error: "No se pudo iniciar sesión. Intentá de nuevo." };
     }
     
   }

@@ -9,9 +9,12 @@ export async function updateTicketRegistrationForDayStatusAction(
   values: Partial<TicketRegistrationForDayStatusSchemaType>,
 ) {
   try {
-    const success = await updateTicketStatusAPI(id, values);
-    if (!success) {
+    const result = await updateTicketStatusAPI(id, values);
+    if (!result) {
       return { error: 'Error al editar el ticket' };
+    }
+    if ('error' in result) {
+      return { error: result.error?.message || 'Error al editar el ticket' };
     }
     return { success: 'Ticket editado exitosamente' };
   } catch (error) {

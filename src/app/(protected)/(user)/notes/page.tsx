@@ -1,26 +1,29 @@
-export const dynamic = "force-dynamic"
-export const fetchCache = "force-no-store"
-import { AlertCircle, CreditCardIcon } from 'lucide-react';
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+
 import { NotesTable } from './components/notes-table';
 import { noteColumns } from './components/note-columns';
 import { getNotes } from '@/services/notes.service';
-
+import { PageHeader } from '@/components/page-header';
 
 export default async function NotePage() {
   const notes = await getNotes();
+  const count = notes?.data?.length ?? 0;
 
   return (
-    <div className="container mx-auto px-4 py-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-3 mb-6 sm:mb-8 bg-secondary/50 p-4 sm:p-6 rounded-xl backdrop-blur-sm">
-        <AlertCircle  className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Avisos</h1>
-        </div>
-      </div>
-      <NotesTable
-        columns={noteColumns}
-        data={notes?.data || []}
+    <div className="container mx-auto px-4 py-6 sm:p-8 max-w-7xl">
+      <PageHeader
+        title="Avisos"
+        description={
+          count > 0
+            ? `${count} avisos · información compartida del equipo del día a día.`
+            : 'Creá el primer aviso para que todos en el turno lo vean.'
+        }
       />
+
+      <div className="mt-2">
+        <NotesTable columns={noteColumns} data={notes?.data || []} />
+      </div>
     </div>
   );
 }
