@@ -10,6 +10,9 @@ export type TicketRegistrationForDay = {
     price: number;
     weeks: number;
     days: number;
+    // Opcionales: la planilla los muestra si el backend los manda; esta versión no los guarda.
+    months?: number | null;
+    paymentMetodo?: 'CASH' | 'TRANSFER' | null;
     dateNow: Date | null;
     ticketTimeType: TicketTimeType;
     vehicleType: TicketType;

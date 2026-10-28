@@ -12,6 +12,8 @@ export type TicketRegistration = {
     entryTime: string;
     departureTime: string;
     dateNow: Date | null;
+    // Opcional: la planilla lo muestra (EF/TR) si el backend lo manda; esta versión no lo guarda.
+    paymentMetodo?: 'CASH' | 'TRANSFER' | null;
     ticket: Ticket;
     boxList: BoxList;
     updatedAt: Date;

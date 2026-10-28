@@ -17,6 +17,7 @@ import {
   ParkingCircle,
   Ticket,
   DollarSignIcon,
+  Users,
 } from 'lucide-react'
 
 import {
@@ -38,6 +39,7 @@ export function AdminNavbarSidebar({
 
   const allNavItems = [
     { title: 'Usuarios', url: '/admin/users', icon: <User /> },
+    { title: 'Clientes', url: '/admin/clientes', icon: <Users /> },
     { title: 'Tickets', url: '/admin/tickets', icon: <Ticket /> },
     { title: 'Tipo de Estacionamiento', url: '/admin/parking-type', icon: <ParkingCircle /> },
     { title: 'Actualizar Montos', url: '/admin/update-amount-customers', icon: <DollarSignIcon /> },

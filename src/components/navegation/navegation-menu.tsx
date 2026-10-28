@@ -6,13 +6,17 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { ChevronsUpDown, Home, Key, KeyIcon, ShieldCheck, Users } from 'lucide-react';
+import { BarChart3, ChevronsUpDown, Home, Key, KeyIcon, ShieldCheck, Users } from 'lucide-react';
 import Link from 'next/link';
 import { BoxListDialog } from '../box-list-dialog';
 import { useState } from 'react';
+import { useSession } from 'next-auth/react';
 
 export function NavigationMenuDemo({ setIsExpanded }: { setIsExpanded: (state: boolean) => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // "Ver métricas" lleva a /admin/clientes, que solo puede abrir un administrador.
+  const { data: session } = useSession();
+  const isAdmin = session?.user?.role?.toUpperCase() === 'ADMIN';
 
   const handleToggleMenu = () => {
     const newState = !menuOpen;
@@ -68,6 +72,20 @@ export function NavigationMenuDemo({ setIsExpanded }: { setIsExpanded: (state: b
         </DropdownMenuItem>
       </Link>
     </DropdownMenuGroup>
+
+    {isAdmin && (
+      <>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <Link href="/admin/clientes">
+            <DropdownMenuItem className="cursor-pointer flex items-center gap-2 pl-4 text-yellow-400">
+              <BarChart3 size={18} />
+              Ver métricas
+            </DropdownMenuItem>
+          </Link>
+        </DropdownMenuGroup>
+      </>
+    )}
   </div>
         )}
       </SidebarMenuItem>

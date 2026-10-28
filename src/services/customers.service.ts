@@ -347,13 +347,21 @@ export const createCustomer = async (
     }
   };
 
+    // Sin parámetros trae todos los recibos (como siempre); con from/to (YYYY-MM-DD) solo los
+    // de ese período — lo usa la página de métricas de Clientes para mostrar un mes.
     export const findReceipts = async (
+    params?: { from?: string; to?: string },
   ) => {
     try {
-      const response = await fetch(`${BASE_URL}/receipts`, {
+      const search = new URLSearchParams();
+      if (params?.from) search.set('from', params.from);
+      if (params?.to) search.set('to', params.to);
+      const query = search.toString();
+      const response = await fetch(`${BASE_URL}/receipts${query ? `?${query}` : ''}`, {
         headers: {
           "Content-Type": "application/json",
         },
+        cache: 'no-store',
       });
       const data = await response.json();
   
