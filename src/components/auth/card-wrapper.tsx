@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/card';
 import { BackButton } from './back-button';
 import { Header } from './header';
+import { Suspense } from 'react';
 
 interface CardWrapperProps {
   children?: React.ReactNode;
@@ -23,15 +24,13 @@ export function CardWrapper({
   backButtonHref,
 }: CardWrapperProps) {
   return (
-    <Card className="w-[420px] border-gm-line-strong shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)] overflow-hidden">
-      {/* caution-tape strip */}
-      <div className="gm-stripes h-[6px] w-full" aria-hidden />
-      <CardHeader className="pt-7">
-        <Header label={headerLabel} />
+    <Card className="w-[400px] shadow-md">
+      <CardHeader>
+        <Header label={headerLabel || ""} />
       </CardHeader>
       <CardContent>{children}</CardContent>
       {backButtonHref && backButtonLabel && (
-        <CardFooter className="flex justify-center pt-3">
+        <CardFooter className="flex justify-center">
           <BackButton label={backButtonLabel} backButtonHref={backButtonHref} />
         </CardFooter>
       )}

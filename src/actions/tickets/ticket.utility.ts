@@ -13,10 +13,7 @@ export function handleTicketError(error: TicketError): TicketError {
       errorMessage = 'Ya existe un tipo de precio para este ticket.';
       break;
     case 'TICKET_PRICE_NOT_FOUND':
-      errorMessage = error.message || 'No se encontró el precio del ticket.';
-      break;
-    case 'TICKET_PRICE_BRACKET_NOT_FOUND':
-      errorMessage = error.message || 'No hay tarifas configuradas para este tipo de vehículo.';
+      errorMessage = 'No se encontró el precio del ticket.';
       break;
     default:
       errorMessage = error.message || 'Error desconocido.';

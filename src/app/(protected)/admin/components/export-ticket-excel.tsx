@@ -5,7 +5,6 @@ import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
 import { toast } from 'sonner';
 import { Ticket } from '@/types/ticket.type';
-import { FileSpreadsheet } from 'lucide-react';
 
 interface Props {
   tickets: Ticket[];
@@ -54,13 +53,12 @@ export const ExportTicketsExcel = ({ tickets }: Props) => {
 
   return (
     <Button
-      variant="outline"
+      variant="ghost"
+      className="w-full justify-start"
       size="sm"
-      className="h-8 gap-1.5 rounded-md border-border bg-gm-surface-2 text-[12px] font-medium text-muted-foreground hover:text-foreground"
       onClick={handleExport}
     >
-      <FileSpreadsheet className="size-3.5" />
-      Exportar
+      Exportar Excel Tickets
     </Button>
   );
 };

@@ -25,5 +25,4 @@ export type Scanner ={
     id: string | null;
     receipt: Receipt;
     receiptId?: string;
-    registration?: TicketRegistration;
 }

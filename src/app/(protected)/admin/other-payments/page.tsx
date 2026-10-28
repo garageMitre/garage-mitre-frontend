@@ -1,26 +1,31 @@
 export const dynamic = "force-dynamic"
 export const fetchCache = "force-no-store"
+import { Banknote, CreditCardIcon, User, Wallet } from 'lucide-react';
+import CardOtherPayment from './components/create-other-payment-card';
 import { expenseColumns } from './components/other-payment-columns';
 import { ExpenseTable } from './components/other-payment-table';
-import { CreateOtherPaymentDialog } from './components/create-other-payment-dialog';
 import { getExpenses } from '@/services/expenses.service';
-import { PageHeader } from '@/components/page-header';
-import { PageShell } from '@/components/page-shell';
 
 
 export default async function OtherPaymentPage() {
   const expenses = await getExpenses()
   return (
-    <PageShell>
-      <PageHeader
-        title="Registrar ingresos o egresos"
-        description="Cargá los movimientos que no provienen de tickets ni abonos."
-        actions={<CreateOtherPaymentDialog />}
-      />
-      <ExpenseTable
-        columns={expenseColumns}
-        data={expenses|| []}
-      />
-    </PageShell>
+    <div className="container mx-auto px-4 py-4 sm:p-6">
+      <div className="w-3/5 mx-auto">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-3 mb-6 sm:mb-8 bg-secondary/50 p-4 sm:p-6 rounded-xl backdrop-blur-sm">
+          <Banknote className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold">Registrar Ingresos o Egresos</h1>
+          </div>
+        </div>
+      </div>
+      <div className='mb-10'>
+        <CardOtherPayment />
+      </div>
+        <ExpenseTable
+          columns={expenseColumns}
+          data={expenses|| []}
+        />
+    </div>
   );
 }

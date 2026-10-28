@@ -1,13 +1,17 @@
 'use server';
 
 import { UpdateTicketPriceSchemaType } from '@/schemas/ticket-price.schema';
-import { updateTicketPrice as updateTicketPriceAPI } from '@/services/tickets.service';
+import { UpdateTicketSchemaType } from '@/schemas/ticket.schema';
+import { updateTicketPrice as updateTicketPriceAPI } from '@/services/tickets.service'
 import { handleTicketError, TicketError } from './ticket.utility';
 
-export async function updateTicketPriceAction(id: string, values: Partial<UpdateTicketPriceSchemaType>) {
+export async function updateTicketPriceAction(
+  id: string,
+  values: Partial<UpdateTicketPriceSchemaType>,
+) {
   try {
-    const ticketPrice = await updateTicketPriceAPI(id, values);
-    if (!ticketPrice) {
+    const ticket = await updateTicketPriceAPI(id, values);
+    if (!ticket) {
       return {
         error: {
           code: 'SERVER_ERROR',
@@ -16,17 +20,18 @@ export async function updateTicketPriceAction(id: string, values: Partial<Update
       };
     }
 
-    if ('error' in ticketPrice) {
-      return { error: handleTicketError(ticketPrice.error as TicketError) };
+    if ('error' in ticket) {
+      return { error: handleTicketError(ticket.error as TicketError) };
     }
 
-    return { success: 'Tarifa editada exitosamente' };
-  } catch (error: unknown) {
+    return { success: 'Precio ticket creado exitosamente' };
+  }  catch (error: unknown) {
     console.error('Error desde el backend:', error);
     return {
       error: {
         code: 'SERVER_ERROR',
-        message: (error as Error)?.message || 'Error inesperado en el servidor.',
+        message:
+          (error as Error)?.message || 'Error inesperado en el servidor.',
       },
     };
   }

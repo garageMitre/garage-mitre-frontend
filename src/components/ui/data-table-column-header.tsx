@@ -3,8 +3,8 @@ import { Column } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
 import {
   ArrowDownIcon,
+  ArrowDownUpIcon,
   ArrowUpIcon,
-  ChevronsUpDown,
   EyeOffIcon,
 } from 'lucide-react';
 import {
@@ -15,7 +15,6 @@ import {
   DropdownMenuSeparator,
 } from './dropdown-menu';
 import { Button } from './button';
-
 interface DataTableColumnHeaderProps<TData, TValue>
   extends React.HTMLAttributes<HTMLDivElement> {
   column: Column<TData, TValue>;
@@ -32,36 +31,36 @@ export function DataTableColumnHeader<TData, TValue>({
   }
 
   return (
-    <div className={cn('flex items-center', className)}>
+    <div className={cn('flex items-center space-x-2', className)}>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"
             size="sm"
-            className="-ml-2 h-7 gap-1 px-2 text-[11px] font-bold uppercase tracking-[0.06em] text-muted-foreground hover:text-foreground data-[state=open]:text-foreground"
+            className="-ml-3 h-8 data-[state=open]:bg-accent"
           >
-            {title}
+            <span>{title}</span>
             {column.getIsSorted() === 'desc' ? (
-              <ArrowDownIcon className="size-3" />
+              <ArrowDownIcon className="ml-2 h-4 w-4" />
             ) : column.getIsSorted() === 'asc' ? (
-              <ArrowUpIcon className="size-3" />
+              <ArrowUpIcon className="ml-2 h-4 w-4" />
             ) : (
-              <ChevronsUpDown className="size-3 opacity-50" />
+              <ArrowDownUpIcon className="ml-2 h-4 w-4" />
             )}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="min-w-[120px]">
-          <DropdownMenuItem onClick={() => column.toggleSorting(false)} className="gap-2 text-[12.5px]">
-            <ArrowUpIcon className="size-3.5 text-muted-foreground" />
-            Ascendente
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
+            <ArrowUpIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+            Asc
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => column.toggleSorting(true)} className="gap-2 text-[12.5px]">
-            <ArrowDownIcon className="size-3.5 text-muted-foreground" />
-            Descendente
+          <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
+            <ArrowDownIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
+            Desc
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => column.toggleVisibility(false)} className="gap-2 text-[12.5px]">
-            <EyeOffIcon className="size-3.5 text-muted-foreground" />
+          <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
+            <EyeOffIcon className="mr-2 h-3.5 w-3.5 text-muted-foreground/70" />
             Ocultar
           </DropdownMenuItem>
         </DropdownMenuContent>

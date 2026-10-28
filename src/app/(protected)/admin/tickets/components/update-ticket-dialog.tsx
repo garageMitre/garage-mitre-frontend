@@ -1,8 +1,24 @@
 'use client';
 
-import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useTransition } from 'react';
+import {
+  updateUserPassword,
+  UpdateUserPasswordType,
+  updateUserSchema,
+  UpdateUserSchemaType,
+} from '@/schemas/user.schema';
+import { toast } from 'sonner';
 import {
   Form,
   FormControl,
@@ -11,24 +27,26 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+import { Eye, EyeOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { updatePassword } from '@/actions/users/update-password.action';
+import { signOut, useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { getUserByUsername } from '@/services/users.service';
+import { useCurrentUser } from '@/hooks/auth/use-current-user';
+import { updateUserAction } from '@/actions/users/update-user.action';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { User } from '@/types/user.type';
 import { Ticket } from '@/types/ticket.type';
 import { updateTicketSchema, UpdateTicketSchemaType } from '@/schemas/ticket.schema';
 import { updateTicketAction } from '@/actions/tickets/update-ticket.action';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
-import { Loader2, Pencil, Ticket as TicketIcon } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 
 export function UpdateTicketDialog({ ticket }: { ticket: Ticket }) {
+
   const [isPending, startTransition] = useTransition();
   const [open, setOpen] = useState(false);
 
@@ -40,6 +58,7 @@ export function UpdateTicketDialog({ ticket }: { ticket: Ticket }) {
       ticketDayType: 'DAY',
     },
   });
+
 
   const onSubmit = async (values: UpdateTicketSchemaType) => {
     startTransition(async () => {
@@ -55,36 +74,26 @@ export function UpdateTicketDialog({ ticket }: { ticket: Ticket }) {
   };
 
   return (
+    <>
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2"
-          size="sm"
-          onClick={() => setOpen(true)}
-        >
-          <Pencil className="size-3.5" />
-          Editar ticket
-        </Button>
+      <Button
+            variant="ghost"
+            className="w-full justify-start"
+            size="sm"
+            onClick={() => setOpen(true)}
+          >
+            Editar Ticket
+          </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <div className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-md border border-gm-yellow/40 bg-gm-yellow/15 text-gm-yellow">
-              <TicketIcon className="size-4" />
-            </span>
-            <div>
-              <DialogTitle>Actualizar ticket</DialogTitle>
-              <DialogDescription className="mt-0.5">
-                Modificá los datos del código de barras.
-              </DialogDescription>
-            </div>
-          </div>
+      <DialogContent className="max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-full max-w-md sm:max-w-lg">
+        <DialogHeader className="items-center">
+          <DialogTitle>Actualizar Ticket</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
+          <FormField
               control={form.control}
               name="codeBar"
               render={({ field }) => (
@@ -97,6 +106,7 @@ export function UpdateTicketDialog({ ticket }: { ticket: Ticket }) {
                 </FormItem>
               )}
             />
+            {/* Select para Vehicle Type */}
             <FormField
               control={form.control}
               name="vehicleType"
@@ -122,7 +132,7 @@ export function UpdateTicketDialog({ ticket }: { ticket: Ticket }) {
                 </FormItem>
               )}
             />
-            <FormField
+                        <FormField
               control={form.control}
               name="ticketDayType"
               render={({ field }) => (
@@ -138,7 +148,7 @@ export function UpdateTicketDialog({ ticket }: { ticket: Ticket }) {
                         <SelectValue placeholder="Selecciona un tipo" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="DAY">Día</SelectItem>
+                        <SelectItem value="DAY">Dia</SelectItem>
                         <SelectItem value="NIGHT">Noche</SelectItem>
                       </SelectContent>
                     </Select>
@@ -147,14 +157,14 @@ export function UpdateTicketDialog({ ticket }: { ticket: Ticket }) {
                 </FormItem>
               )}
             />
-
+            
             <Button className="w-full" type="submit" disabled={isPending}>
-              {isPending ? <Loader2 className="size-4 animate-spin" /> : <Pencil className="size-4" />}
-              Guardar cambios
+              Editar Ticket
             </Button>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

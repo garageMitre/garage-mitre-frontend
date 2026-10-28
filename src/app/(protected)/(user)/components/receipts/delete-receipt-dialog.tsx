@@ -22,15 +22,13 @@ import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
-import { Trash2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { Receipt } from '@/types/receipt.type';
 import { deleteReceiptSchema, DeleteReceiptSchemaType } from '@/schemas/receipt.schema';
 import { deleteReceiptAction } from '@/actions/receipts/delete-receipt.action';
 
 const DELETE_RECEIPT_TEXT = 'Eliminar recibo';
 
-export function DeleteReceiptDialog({ receipt, triggerClassName }: { receipt: Receipt; triggerClassName?: string }) {
+export function DeleteReceiptDialog({ receipt }: { receipt: Receipt }) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -62,11 +60,10 @@ export function DeleteReceiptDialog({ receipt, triggerClassName }: { receipt: Re
         <DialogTrigger asChild>
           <Button
             variant="ghost"
-            className={cn('w-full justify-start gap-2', triggerClassName)}
+            className="w-full justify-start"
             size="sm"
             onClick={() => setOpen(true)}
           >
-            <Trash2 size={13} className="text-muted-foreground shrink-0" />
             Eliminar Recibo
           </Button>
         </DialogTrigger>

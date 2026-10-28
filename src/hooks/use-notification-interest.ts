@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useRouter } from 'next/navigation';
 
-// Estaba hardcodeado a localhost — en producción el socket nunca iba a conectar al
-// backend real (mismo bug que use-notification.ts, al revés).
-const socket = io(process.env.NEXT_PUBLIC_API_URL, {
+const socket = io('http://localhost:3030', {
   transports: ['websocket'],
   reconnection: true,
   reconnectionAttempts: 5,
@@ -14,14 +12,13 @@ const socket = io(process.env.NEXT_PUBLIC_API_URL, {
 });
 
 export const useNotificationsInterest = () => {
-  // Arranca en [] siempre (igual en servidor y cliente) y recién lee localStorage en un
-  // efecto — leerlo en el useState inicial desincroniza SSR (sin window) del cliente.
-  const [notifications, setNotifications] = useState<any[]>([]);
-
-  useEffect(() => {
-    const storedNotifications = localStorage.getItem('notifications-interest');
-    if (storedNotifications) setNotifications(JSON.parse(storedNotifications));
-  }, []);
+  const [notifications, setNotifications] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      const storedNotifications = localStorage.getItem('notifications-interest');
+      return storedNotifications ? JSON.parse(storedNotifications) : [];
+    }
+    return [];
+  });
 
   useEffect(() => {
     // Solo ejecutar el código en el cliente

@@ -1,9 +1,11 @@
+
 import { SidebarInset } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 import { currentUser } from '@/lib/auth';
 import { NavUser } from './nav-user';
-import { GarageMitreLogo } from '@/components/brand/logo';
+import { NotificationSidebar } from '@/app/(protected)/(user)/components/notifications-sidebar';
+import { getTicketsRegistrationForDay } from '@/services/tickets.service';
 
 interface AppNavbarProps {
   children: ReactNode;
@@ -13,51 +15,48 @@ interface AppNavbarProps {
 
 export async function AppNavbar({ children, adminSidebar, userSidebar }: AppNavbarProps) {
   const user = await currentUser();
+  const tickets = await getTicketsRegistrationForDay();
+  const ticketRegistrationsDayOrWeek = Array.isArray(tickets) ? tickets : [];
+  
+
+
+
 
   return (
     <>
-      {user?.role === 'ADMIN' ? (
-        <div className="hidden md:block">{adminSidebar}</div>
-      ) : (
-        <div className="hidden md:block">{userSidebar}</div>
-      )}
-
+    {user?.role === 'ADMIN' ? (
+      <div className="hidden md:block">{adminSidebar}</div>
+    ):(
+      <div className="hidden md:block">{userSidebar}</div>
+    )}
       <SidebarInset className="flex flex-col">
-        {/* — TOPBAR — */}
-        <header className="sticky top-0 z-30 border-b border-border/60 bg-gm-surface/80 backdrop-blur-xl supports-[backdrop-filter]:bg-gm-surface/60">
-          {/* Caution-tape accent */}
-          <div className="gm-stripes h-[3px] w-full" aria-hidden />
+        <header className="relative flex h-14 items-center gap-2 border-b shadow-sm px-6">
+          <div className="flex items-center w-full justify-between">
+            <Link href="/tickets">
+               <div className="flex items-center space-x-2 ml-20 mt-3 mb-2">
+                 <div className="bg-yellow-400 px-3 py-1 rounded-md shadow-md">
+                   <span className="text-black text-lg font-bold">GARAGE</span>
+                 </div>
+                  <span className="text-white text-lg font-semibold">MITRE</span>
+                </div>
+             </Link>
+            <div className="flex items-center gap-6">
+              <div>
+             {/* <NotificationSidebar/> */}
+              </div>
+              <NavUser
+                userNav={{
+                  avatar: user?.image ?? '',
+                  email: user?.email ?? '',
+                  name: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`,
+                  role: user?.role || 'USER',
+                }}
+                ticketRegistrationsDayOrWeek={ticketRegistrationsDayOrWeek || []}
+              />
 
-          <div className="flex h-16 items-center gap-4 px-6">
-            <Link
-              href="/tickets"
-              className="group ml-1 inline-flex items-center gap-2 transition-opacity hover:opacity-90"
-            >
-              <GarageMitreLogo size="sm" />
-            </Link>
-
-            {/* Subtle separator */}
-            <div className="hidden md:block h-6 w-px bg-border/40" />
-
-            {/* Ambient label */}
-            <span className="hidden md:inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.1em] text-muted-foreground">
-              <span className="h-1.5 w-1.5 rounded-full bg-[hsl(120_35%_55%)] animate-pulse" />
-              Operativo
-            </span>
-
-            <div className="flex-1" />
-
-            <NavUser
-              userNav={{
-                avatar: user?.image ?? '',
-                email: user?.email ?? '',
-                name: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`,
-                role: user?.role || 'USER',
-              }}
-            />
+            </div>
           </div>
         </header>
-
         {children}
       </SidebarInset>
     </>

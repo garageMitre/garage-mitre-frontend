@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { useRouter } from 'next/navigation';
 
-// Estaba hardcodeado al backend de producción — en local nunca iba a recibir el evento
-// de un aviso creado contra el backend local, por más que el socket "conectara" bien.
-const socket = io(process.env.NEXT_PUBLIC_API_URL, {
+const socket = io('https://garage-mitre-backend-production.up.railway.app', {
   transports: ['websocket'],
   reconnection: true,
   reconnectionAttempts: 5,
@@ -15,19 +13,20 @@ const socket = io(process.env.NEXT_PUBLIC_API_URL, {
 
 // useNotifications.ts
 export const useNotifications = () => {
-  // Arrancan siempre en false/[] (igual en servidor y cliente) — leer localStorage acá
-  // directamente causaba un mismatch de hidratación (SSR no tiene window, así que
-  // siempre renderizaba "sin alerta" aunque el cliente sí tuviera una guardada), lo que
-  // hacía que el puntito de aviso no se viera de forma confiable. Se lee recién en el
-  // efecto de abajo, ya montado el componente.
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [hasNewNoteAlert, setHasNewNoteAlert] = useState<boolean>(false);
+  const [notifications, setNotifications] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      const storedNotifications = localStorage.getItem('notifications');
+      return storedNotifications ? JSON.parse(storedNotifications) : [];
+    }
+    return [];
+  });
 
-  useEffect(() => {
-    const storedNotifications = localStorage.getItem('notifications');
-    if (storedNotifications) setNotifications(JSON.parse(storedNotifications));
-    setHasNewNoteAlert(localStorage.getItem('hasNewNoteAlert') === 'true');
-  }, []);
+  const [hasNewNoteAlert, setHasNewNoteAlert] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('hasNewNoteAlert') === 'true';
+    }
+    return false;
+  });
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
