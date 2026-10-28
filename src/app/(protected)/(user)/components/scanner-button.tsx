@@ -85,7 +85,7 @@ export default function ScannerButton({
             toast.error(data?.error || 'Error desconocido');
           } else {
             if (data.type === 'RECEIPT') {
-              toast.success('🧾 Recibo detectado', { duration: 5000 });
+              toast.success('Recibo detectado', { duration: 5000 });
               setCustomerId(data.id);
               setBarCode(data.barcode);
               setReceipt(data.receipt);
@@ -103,7 +103,23 @@ export default function ScannerButton({
                 toast.error('Error al obtener los datos del cliente.');
               }
             } else {
-              toast.success('🎫 Ticket detectado', { duration: 3000 });
+              // El ícono del toast ya indica el éxito: el texto dice qué pasó (entrada o salida)
+              // y con qué ticket, para que el operador lo confirme de un vistazo.
+              const registration = data.registration;
+              const ars = (n: number) => new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+              if (registration?.departureTime) {
+                const due = Math.max(0, registration.price - (registration.advancePaidAmount ?? 0));
+                toast.success('Salida registrada', {
+                  description: `Ticket ${registration.codeBarTicket ?? code} · ${registration.advancePaidAmount ? `a cobrar ${ars(due)} (total ${ars(registration.price)})` : `total ${ars(registration.price)}`}`,
+                  duration: 4000,
+                });
+              } else {
+                const vehicle = registration?.ticket?.vehicleType === 'CAMIONETA' ? 'Camioneta' : registration?.ticket?.vehicleType === 'AUTO' ? 'Auto' : null;
+                toast.success('Entrada registrada', {
+                  description: `Ticket ${registration?.ticket?.codeBar ?? code}${vehicle ? ` · ${vehicle}` : ''}`,
+                  duration: 3000,
+                });
+              }
               onTicketRegistered?.();
               if (data.registration?.departureTime) {
                 onTicketExited?.({ id: data.registration.id, price: data.registration.price });
