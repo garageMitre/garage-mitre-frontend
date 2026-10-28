@@ -253,6 +253,9 @@
      borde) — con una baldosa de 36px eso la corre y la corta contra el borde redondeado. */
   margin: 2px 0 0 0;
   display: grid;
+  /* place-content además de place-items: sonner trae justify-content: flex-start (pensado
+     para su flex) y en una grilla eso pega la columna del ícono al borde izquierdo. */
+  place-content: center;
   place-items: center;
   border-radius: 9px;
   border: 1px solid hsl(var(--gm-yellow) / 0.4);
@@ -261,6 +264,8 @@
 [data-sonner-toast] [data-icon] svg {
   width: 19px;
   height: 19px;
+  /* sonner corre el SVG 1px a la izquierda para su ícono suelto; dentro de la baldosa descentra. */
+  margin: 0;
   color: hsl(var(--gm-yellow));
 }
 [data-sonner-toast][data-type="success"] [data-icon] {
