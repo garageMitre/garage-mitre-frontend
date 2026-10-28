@@ -26,6 +26,8 @@ import {
   Ban,
   Save,
   MoreHorizontal,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Customer } from '@/types/cutomer.type';
 import { useSession } from 'next-auth/react';
@@ -226,12 +228,12 @@ export function PaymentSummaryTable({
       if (result.error) {
         toast.error(result.error.message);
       } else {
-        toast.success('✅ Pago registrado exitosamente.');
+        toast.success('Pago registrado exitosamente.');
         await refreshReceipts();
       }
     } catch (error) {
       console.error('Error al registrar el pago:', error);
-      toast.error('❌ Error al registrar el pago.');
+      toast.error('Error al registrar el pago.');
     } finally {
       setOpenPaymentDialog(false);
       setSelectedReceiptForPayment(null);
@@ -251,9 +253,55 @@ export function PaymentSummaryTable({
       case 'FIX':
         return 'Corrección';
       default:
-        return 'Automatico';
+        // MIX/TP: los estampa el backend cuando el pago de un inquilino de terceros compensa este recibo.
+        return 'Automático';
     }
   }
+
+  const paymentTypesOf = (receipt: Receipt): string[] =>
+    receipt.payments?.length
+      ? receipt.payments.map((p) => translatePaymentType(p.paymentType))
+      : receipt.paymentHistoryOnAccount?.length
+      ? receipt.paymentHistoryOnAccount.map((p) => translatePaymentType(p.paymentType))
+      : receipt.paymentType
+      ? [translatePaymentType(receipt.paymentType)]
+      : [];
+
+  const ars = (amount: number) =>
+    new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(amount);
+
+  // Mientras está pendiente "price" es el saldo que falta; pagado (price 0) se muestra el monto original.
+  const amountOf = (receipt: Receipt) =>
+    receipt.price && receipt.price > 0 ? receipt.price : receipt.startAmount;
+
+  // paymentDate es una fecha sin hora (YYYY-MM-DD): se formatea tal cual, sin corrimiento de zona.
+  const formatPaymentDate = (value?: string | null) => {
+    if (!value) return '—';
+    const date = dayjs(value);
+    return date.isValid() ? date.format('DD/MM/YYYY') : '—';
+  };
+
+  const periodOf = (receipt: Receipt) => {
+    const month = getMonthName(receipt.startDate);
+    const date = receipt.startDate ? dayjs.tz(receipt.startDate, TZ) : null;
+    return date?.isValid() ? `${month} ${date.year()}` : month;
+  };
+
+  const totalPages = Math.max(1, Math.ceil(receipts.length / pageSize));
+  const pendingReceipts = receipts.filter((r) => r.status !== 'PAID');
+  const pendingTotal = pendingReceipts.reduce((sum, r) => sum + (r.price ?? 0), 0);
+
+  const confirmCancel = async () => {
+    if (!selectedReceiptId) return;
+    const result = await cancelReceiptAction(selectedReceiptId, customer.id);
+    if (result.error) toast.error(result.error.message);
+    else {
+      toast.success('Recibo cancelado exitosamente');
+      await refreshReceipts();
+    }
+    setOpenCancelDialog(false);
+    setSelectedReceiptId(null);
+  };
 
   return (
     <>
@@ -269,190 +317,212 @@ export function PaymentSummaryTable({
           </button>
         </DialogTrigger>
 
-        <DialogContent className="max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-full max-w-6xl">
-          <DialogHeader className="items-center">
+        <DialogContent className="max-h-[85vh] sm:max-h-[90vh] overflow-y-auto w-full max-w-6xl">
+          <DialogHeader>
             <DialogTitle>
-              Resumen de Recibos pagados y pendientes de{' '}
-              {customer.firstName} {customer.lastName}
+              Resumen de recibos de {customer.firstName} {customer.lastName}
             </DialogTitle>
+            <DialogDescription>
+              {receipts.length} {receipts.length === 1 ? 'recibo' : 'recibos'} ·{' '}
+              {pendingReceipts.length === 0
+                ? 'sin deuda pendiente'
+                : `${pendingReceipts.length} ${pendingReceipts.length === 1 ? 'pendiente' : 'pendientes'} por ${ars(pendingTotal)}`}
+            </DialogDescription>
           </DialogHeader>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[150px]">Estado</TableHead>
-                <TableHead>Fecha de Inicio</TableHead>
-                <TableHead>Fecha de Pago</TableHead>
-                <TableHead>Método/s de Pago</TableHead>
-                <TableHead className="text-right pr-12">Monto</TableHead>
-                <TableHead>Imprimir</TableHead>
-                <TableHead>Cancelar</TableHead>
-                <TableHead>Registrar</TableHead>
-              </TableRow>
-            </TableHeader>
+          <div className="overflow-x-auto rounded-lg border">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-secondary/40 hover:bg-secondary/40">
+                  <TableHead className="w-[130px]">Estado</TableHead>
+                  <TableHead>Período</TableHead>
+                  <TableHead>Fecha de pago</TableHead>
+                  <TableHead>Medio de pago</TableHead>
+                  <TableHead className="text-right">Monto</TableHead>
+                  <TableHead>Movimientos</TableHead>
+                  <TableHead className="text-right">Acciones</TableHead>
+                </TableRow>
+              </TableHeader>
 
-            <TableBody>
-              {paginatedReceipts.length > 0 ? (
-                paginatedReceipts.map((receiptOwner) => (
-                  <TableRow key={receiptOwner.id}>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center space-x-2">
-                        {receiptOwner.status === 'PAID' ? (
-                          <BadgeCheck className="h-5 w-5 text-green-500" />
-                        ) : (
-                          <Clock className="h-5 w-5 text-yellow-500" />
-                        )}
-                        <span>
-                          {receiptOwner.status === 'PAID' ? 'Pagado' : 'Pendiente'}
-                        </span>
-                      </div>
-                    </TableCell>
-
-                    <TableCell>{getMonthName(receiptOwner.startDate)}</TableCell>
-
-                    <TableCell>
-                      {receiptOwner.paymentDate &&
-                        new Date(
-                          new Date(receiptOwner.paymentDate).getTime() +
-                            new Date().getTimezoneOffset() * 60000
-                        ).toLocaleDateString()}
-                    </TableCell>
-
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col gap-1">
-                        {receiptOwner.payments?.length
-                          ? receiptOwner.payments.map((p, i) => (
-                              <span key={i}>{translatePaymentType(p.paymentType)}</span>
-                            ))
-                          : receiptOwner.paymentHistoryOnAccount?.length
-                          ? receiptOwner.paymentHistoryOnAccount.map((p, i) => (
-                              <span key={i}>{translatePaymentType(p.paymentType)}</span>
-                            ))
-                          : receiptOwner.paymentType
-                          ? translatePaymentType(receiptOwner.paymentType)
-                          : ''}
-                      </div>
-                    </TableCell>
-
-                    <TableCell className="text-right pr-6 align-middle">
-                      <span className="block pr-5">
-                        $
-                        {receiptOwner.price && receiptOwner.price > 0
-                          ? receiptOwner.price
-                          : receiptOwner.startAmount}
-                      </span>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handlePrint(receiptOwner)}
-                      >
-                        <Printer className="h-5 w-5 text-gray-600 hover:text-gray-900" />
-                      </Button>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <Dialog
-                        open={openCancelDialog}
-                        onOpenChange={setOpenCancelDialog}
-                      >
-                        <DialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              setSelectedReceiptId(receiptOwner.id);
-                              setOpenCancelDialog(true);
-                            }}
+              <TableBody>
+                {paginatedReceipts.length > 0 ? (
+                  paginatedReceipts.map((receiptOwner) => {
+                    const isPaid = receiptOwner.status === 'PAID';
+                    const methods = paymentTypesOf(receiptOwner);
+                    return (
+                      <TableRow key={receiptOwner.id} className="transition-colors hover:bg-secondary/30">
+                        <TableCell>
+                          <span
+                            className={
+                              isPaid
+                                ? 'inline-flex items-center gap-1.5 rounded-full border border-green-500/30 bg-green-500/10 px-2 py-0.5 text-xs font-medium text-green-400'
+                                : 'inline-flex items-center gap-1.5 rounded-full border border-yellow-500/30 bg-yellow-500/10 px-2 py-0.5 text-xs font-medium text-yellow-400'
+                            }
                           >
-                            <Ban className="w-5 h-5 text-red-500 hover:text-red-700" />
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>¿Está seguro?</DialogTitle>
-                            <DialogDescription>
-                              Este recibo se marcará como "pendiente" y se eliminará de la
-                              planilla de caja. Si se pagó con crédito, el monto será
-                              reintegrado.
-                            </DialogDescription>
-                          </DialogHeader>
-                          <DialogFooter>
+                            {isPaid ? <BadgeCheck className="size-3.5" /> : <Clock className="size-3.5" />}
+                            {isPaid ? 'Pagado' : 'Pendiente'}
+                          </span>
+                        </TableCell>
+
+                        <TableCell className="whitespace-nowrap">{periodOf(receiptOwner)}</TableCell>
+
+                        <TableCell className="whitespace-nowrap tabular-nums text-muted-foreground">
+                          {formatPaymentDate(receiptOwner.paymentDate)}
+                        </TableCell>
+
+                        <TableCell>
+                          {methods.length ? (
+                            <div className="flex flex-col gap-0.5 text-sm">
+                              {methods.map((method, i) => (
+                                <span key={i}>{method}</span>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+
+                        <TableCell className="text-right font-medium tabular-nums whitespace-nowrap">
+                          {ars(amountOf(receiptOwner))}
+                          {!isPaid && receiptOwner.startAmount > (receiptOwner.price ?? 0) && (
+                            <span className="block text-xs font-normal text-muted-foreground">
+                              de {ars(receiptOwner.startAmount)}
+                            </span>
+                          )}
+                        </TableCell>
+
+                        <TableCell>
+                          <ReceiptMovementsDrawer receipt={receiptOwner} />
+                        </TableCell>
+
+                        <TableCell>
+                          <div className="flex items-center justify-end gap-0.5">
                             <Button
-                              variant="outline"
-                              onClick={() => setOpenCancelDialog(false)}
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
+                              title="Imprimir recibo"
+                              aria-label="Imprimir recibo"
+                              onClick={() => handlePrint(receiptOwner)}
                             >
-                              Cancelar
+                              <Printer className="size-4" />
+                            </Button>
+                            {/* Registrar solo tiene sentido con saldo; cancelar, sobre un recibo ya pagado. */}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-8"
+                              title={isPaid ? 'El recibo ya está pagado' : 'Registrar pago'}
+                              aria-label="Registrar pago"
+                              disabled={isPaid}
+                              onClick={() => handleRegister(receiptOwner)}
+                            >
+                              <Save className="size-4" />
                             </Button>
                             <Button
-                              onClick={async () => {
-                                if (!selectedReceiptId) return;
-                                const result = await cancelReceiptAction(
-                                  selectedReceiptId,
-                                  customer.id
-                                );
-                                if (result.error) toast.error(result.error.message);
-                                else {
-                                  toast.success('Recibo cancelado exitosamente');
-                                  await refreshReceipts();
-                                }
-                                setOpenCancelDialog(false);
+                              variant="ghost"
+                              size="icon"
+                              className="size-8 text-red-500 hover:text-red-400"
+                              title={isPaid ? 'Cancelar pago' : 'Solo se cancela un recibo pagado'}
+                              aria-label="Cancelar pago"
+                              disabled={!isPaid}
+                              onClick={() => {
+                                setSelectedReceiptId(receiptOwner.id);
+                                setOpenCancelDialog(true);
                               }}
                             >
-                              Cancelar Recibo
+                              <Ban className="size-4" />
                             </Button>
-                          </DialogFooter>
-                        </DialogContent>
-                      </Dialog>
-                    </TableCell>
-
-                    <TableCell className="text-center">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleRegister(receiptOwner)}
-                      >
-                        <Save className="h-5 w-5 text-gray-600 hover:text-gray-900" />
-                      </Button>
-                    </TableCell>
-
-                    <TableCell>
-                      <ReceiptMovementsDrawer receipt={receiptOwner} />
-                    </TableCell>
-
-                    <TableCell>
-                      <DropdownMenu
-                        open={openDropdownId === receiptOwner.id}
-                        onOpenChange={(open) =>
-                          setOpenDropdownId(open ? receiptOwner.id : null)
-                        }
-                      >
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuLabel className="text-sm sm:text-base">
-                            Acciones
-                          </DropdownMenuLabel>
-                          <DeleteReceiptDialog receipt={receiptOwner} />
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            <DropdownMenu
+                              open={openDropdownId === receiptOwner.id}
+                              onOpenChange={(open) =>
+                                setOpenDropdownId(open ? receiptOwner.id : null)
+                              }
+                            >
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="size-8" aria-label="Más acciones">
+                                  <MoreHorizontal className="size-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuLabel className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                                  Acciones
+                                </DropdownMenuLabel>
+                                <DeleteReceiptDialog receipt={receiptOwner} />
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center text-sm text-muted-foreground">
+                      {isPending ? 'Cargando recibos…' : 'No hay recibos registrados.'}
                     </TableCell>
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center">
-                    No hay pagos registrados.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Antes se paginaba de a 10 sin botones: los recibos más viejos no se podían ver. */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-end gap-2 text-sm">
+              <span className="text-muted-foreground tabular-nums">
+                Página {currentPage} de {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-8"
+                aria-label="Página anterior"
+                disabled={currentPage <= 1}
+                onClick={() => setCurrentPage((page) => page - 1)}
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-8"
+                aria-label="Página siguiente"
+                disabled={currentPage >= totalPages}
+                onClick={() => setCurrentPage((page) => page + 1)}
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Una sola confirmación para toda la tabla (antes cada fila tenía la suya con el mismo
+          estado y se abrían todas juntas). */}
+      <Dialog
+        open={openCancelDialog}
+        onOpenChange={(value) => {
+          setOpenCancelDialog(value);
+          if (!value) setSelectedReceiptId(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>¿Cancelar el pago de este recibo?</DialogTitle>
+            <DialogDescription>
+              El recibo vuelve a quedar pendiente y se quita de la planilla de caja. Si se pagó con
+              crédito, el monto se reintegra.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="outline" onClick={() => setOpenCancelDialog(false)}>
+              Volver
+            </Button>
+            <Button variant="destructive" onClick={confirmCancel}>
+              Cancelar pago
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 

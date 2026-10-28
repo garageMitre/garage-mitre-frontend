@@ -37,9 +37,9 @@ const hasOnlyReceiptPayment =
   return (
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
-        <span className="text-gray-500 hover:underline cursor-pointer">
+        <button type="button" className="text-xs text-muted-foreground underline-offset-2 transition-colors hover:text-foreground hover:underline focus-visible:outline-none focus-visible:underline">
           Ver movimientos
-        </span>
+        </button>
       </DrawerTrigger>
 
       <DrawerContent className="p-6 sm:max-w-2xl mx-auto rounded-t-xl">

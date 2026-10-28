@@ -97,12 +97,12 @@ export const privateColumns = (customerRenters: Vehicle[]): ColumnDef<Customer>[
           <DropdownMenu open={openDropdown} onOpenChange={setOpenDropdown}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="h-8 w-8 p-0">
-                <span className="sr-only">Open menu</span>
+                <span className="sr-only">Abrir acciones</span>
                 <MoreHorizontal className="h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuLabel className="text-sm sm:text-base">Acciones</DropdownMenuLabel>
+              <DropdownMenuLabel className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Acciones</DropdownMenuLabel>
               <ViewCustomerRenterDialog customer={customer} />
               {session.data?.user.role === 'ADMIN' && (
                 <>
@@ -114,8 +114,8 @@ export const privateColumns = (customerRenters: Vehicle[]): ColumnDef<Customer>[
                     </>
                   ): (
                     <>
-                    <DeletePrivateDialog customer={customer} />
                     <RestoredPrivateDialog customer={customer} />
+                    <DeletePrivateDialog customer={customer} />
                   </>
                   )}
                 </>

@@ -4,13 +4,13 @@ import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Customer } from '@/types/cutomer.type';
-import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Eye, X } from 'lucide-react';
 
@@ -30,43 +30,51 @@ export function ViewCustomerRenterDialog({ customer }: { customer: Customer }) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start" size="sm">
-        <Eye className="w-4 h-4" />
-          Ver Detalles
+        <Button variant="ghost" className="w-full justify-start gap-2 px-2 font-normal" size="sm">
+          <Eye className="w-4 h-4" />
+          Ver detalles
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="max-h-[100vh] sm:max-h-[150vh] overflow-y-auto w-full max-w-2xl sm:max-w-3xl">
-        <DialogHeader className="items-center">
-          <DialogTitle>Información del Cliente</DialogTitle>
+      <DialogContent className="max-h-[90vh] overflow-y-auto w-full max-w-3xl">
+        <DialogHeader>
+          <DialogTitle>
+            {customer.firstName} {customer.lastName}
+          </DialogTitle>
+          <DialogDescription>Información del cliente y sus cocheras.</DialogDescription>
         </DialogHeader>
 
         {/* Datos del Cliente */}
-        <Card>
-          <CardContent className="p-4 space-y-3 text-sm sm:text-base">
-            <p><strong>Nombre y Apellido:</strong> {customer.firstName} {customer.lastName}</p>
-            <p><strong>Celular:</strong> {customer.phone}</p>
-            <p><strong>Número de Vehículos:</strong> {customer.numberOfVehicles}</p>
-          </CardContent>
-        </Card>
+        <dl className="grid grid-cols-1 gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-3">
+          {[
+            { label: 'Nombre y apellido', value: `${customer.firstName} ${customer.lastName}` },
+            { label: 'Celular', value: customer.phone || '—' },
+            { label: 'Cocheras', value: customer.numberOfVehicles },
+          ].map((item) => (
+            <div key={item.label} className="bg-card px-4 py-3">
+              <dt className="text-xs uppercase tracking-wide text-muted-foreground">{item.label}</dt>
+              <dd className="mt-1 text-sm font-medium">{item.value}</dd>
+            </div>
+          ))}
+        </dl>
 
         {/* Sección de Vehículos */}
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold">Vehículos Registrados</h3>
+        <div className="space-y-2">
+          <h3 className="text-sm font-semibold">Cocheras registradas</h3>
           {vehiclesToDisplay && vehiclesToDisplay.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Número de Cochera</TableHead>
-                  <TableHead>Propietario</TableHead>
-                 <TableHead>Monto</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {vehiclesToDisplay.map((vehicleRenter, index) => {
-                  return (
+            <div className="overflow-x-auto rounded-lg border">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-secondary/40 hover:bg-secondary/40">
+                    <TableHead>Cochera</TableHead>
+                    <TableHead>Propietario</TableHead>
+                    <TableHead className="text-right">Monto</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {vehiclesToDisplay.map((vehicleRenter, index) => (
                     <TableRow key={index}>
-                      <TableCell>{vehicleRenter.garageNumber}</TableCell>
+                      <TableCell className="font-medium">{vehicleRenter.garageNumber || '—'}</TableCell>
 
                       {/* Mostrar propietario si es RENTER */}
                       {customer.customerType !== 'OWNER' && (
@@ -75,23 +83,25 @@ export function ViewCustomerRenterDialog({ customer }: { customer: Customer }) {
                             ? `${vehicleRenter.vehicle.customer?.firstName ?? 'Sin nombre'} ${vehicleRenter.vehicle.customer?.lastName ?? ''} (${vehicleRenter.vehicle.garageNumber})`
                             : pendingReceipt?.receiptTypeKey
                               ? receiptTypeNames[pendingReceipt.receiptTypeKey] ?? pendingReceipt.receiptTypeKey
-                              : ''}
+                              : '—'}
                         </TableCell>
                       )}
 
-                      <TableCell>${vehicleRenter.amount}</TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(vehicleRenter.amount ?? 0)}
+                      </TableCell>
                     </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           ) : (
-            <p className="text-center text-gray-500 mt-2">No hay vehículos registrados.</p>
+            <p className="rounded-lg border border-dashed p-4 text-center text-sm text-muted-foreground">No hay cocheras registradas.</p>
           )}
         </div>
 
         {/* Botón de Cerrar */}
-        <div className="flex justify-end mt-4">
+        <div className="flex justify-end">
           <Button variant="outline" size="sm" onClick={() => setOpen(false)}>
             Cerrar
           </Button>

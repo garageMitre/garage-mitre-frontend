@@ -50,6 +50,13 @@ export function NavUser({
   const [openTicketDialog, setOpenTicketDialog] = useState(false);
   const { hasNewNoteAlert, clearNoteAlert } = useNotifications();
   const isAdmin = userNav.role === 'ADMIN';
+  // Dos letras como máximo («Ignacio Gaute» → «IG»), aunque el nombre tenga más palabras.
+  const initials = userNav.name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase() ?? '')
+    .join('');
 
   return (
     <>
@@ -63,18 +70,15 @@ export function NavUser({
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage src={userNav.avatar} alt={userNav.name} />
-                  <AvatarFallback className="rounded-lg">
-                    {userNav.name
-                      .split(' ')
-                      .map((n) => n[0])
-                      .join('')}
+                  <AvatarFallback className="rounded-lg bg-yellow-400/15 text-xs font-semibold text-yellow-400">
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
-                <div className="hidden lg:grid flex-1 text-left text-sm leading-tight">
+                <div className="hidden lg:grid flex-1 text-left text-sm leading-tight" title={`${userNav.name} · ${userNav.email}`}>
                   <span className="truncate font-semibold">{userNav.name}</span>
-                  <span className="truncate text-xs">{userNav.email}</span>
+                  <span className="truncate text-xs text-muted-foreground">{userNav.email}</span>
                 </div>
-                <ChevronsUpDown className="ml-auto size-4" />
+                <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
               </SidebarMenuButton>
             </DropdownMenuTrigger>
 

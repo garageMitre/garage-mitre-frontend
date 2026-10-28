@@ -66,20 +66,20 @@ export function DeleteOwnerDialog({ customer }: { customer: Customer }) {
         <DialogTrigger asChild>
           <Button
             variant="ghost"
-            className="w-full justify-start"
+            className="w-full justify-start gap-2 px-2 font-normal text-red-500 hover:text-red-500"
             size="sm"
             onClick={() => setOpen(true)}
           >
             <Trash className="w-4 h-4" />
-            Eliminar Propietario
+            Eliminar definitivamente
           </Button>
         </DialogTrigger>
 
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Eliminar Propietario</DialogTitle>
+            <DialogTitle>Eliminar definitivamente</DialogTitle>
             <DialogDescription>
-              Ingrese {DELETE_OWNER_TEXT} para confirmar.Se eliminara de forma permanente.
+              Ingrese «{DELETE_OWNER_TEXT}» para confirmar. Se eliminará de forma permanente y no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           <Form {...form}>
@@ -112,7 +112,7 @@ export function DeleteOwnerDialog({ customer }: { customer: Customer }) {
                 </Button>
                 <Button
                   type="submit"
-                  variant="default"
+                  variant="destructive"
                   size="sm"
                   disabled={isPending}
                 >
