@@ -1,16 +1,13 @@
 "use client";
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import {
   AlertCircle,
-  BadgeCheck,
   BellDot,
   Box,
   ChevronsUpDown,
   History,
   LogOut,
-  Rocket,
   Shield,
-  Sparkles,
   TicketIcon,
 } from 'lucide-react';
 
@@ -20,7 +17,6 @@ import {
   DropdownMenuContent,
   DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -29,15 +25,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { User } from 'next-auth';
-import { NavigationMenuDemo } from './navegation-menu';
+import { ClientesMenuGroup } from './navegation-menu';
 import { BoxListDialog } from '../box-list-dialog';
-import { getTodayNotes } from '@/services/notes.service';
 import { useNotifications } from '@/hooks/use-notification';
-import { TicketDayOrWeekTable } from '@/app/(protected)/(user)/tickets/tickets-days-or-weeks/tickets-day-or-week-table';
-import { ticketDayOrWeekColumns } from '@/app/(protected)/(user)/tickets/tickets-days-or-weeks/ticket-day-or-week-columns';
 import { TicketTableDialog } from '@/app/(protected)/(user)/tickets/tickets-days-or-weeks/ticket-table-dialog';
 import { TicketRegistrationForDay } from '@/types/ticket-registration-for-day.type';
 
@@ -53,11 +46,10 @@ export function NavUser({
   };
   ticketRegistrationsDayOrWeek : TicketRegistrationForDay[]
 }) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [openBoxDialog, setOpenBoxDialog] = useState(false);
-  const { hasNewNoteAlert, clearNoteAlert } = useNotifications();
   const [openTicketDialog, setOpenTicketDialog] = useState(false);
-
+  const { hasNewNoteAlert, clearNoteAlert } = useNotifications();
+  const isAdmin = userNav.role === 'ADMIN';
 
   return (
     <>
@@ -87,102 +79,79 @@ export function NavUser({
             </DropdownMenuTrigger>
 
             <DropdownMenuContent
-              className={`w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg transition-all duration-300 ${
-                isExpanded ? 'h-auto' : 'h-full'
-              }`}
+              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
               side="bottom"
               align="center"
               sideOffset={8}
             >
-              {userNav.role === 'ADMIN' && (
-                <NavigationMenuDemo setIsExpanded={setIsExpanded} />
+              {isAdmin && (
+                <>
+                  <ClientesMenuGroup />
+                  <DropdownMenuSeparator />
+                </>
               )}
-              <DropdownMenuSeparator />
 
-              <Link href={'/tickets'}>
-                <DropdownMenuGroup>
-                  <DropdownMenuItem className="cursor-pointer flex items-center gap-2">
+              {/* Operación del día */}
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link href="/tickets">
                     <TicketIcon />
                     Tickets
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </Link>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuGroup>
-                <DropdownMenuItem
-                  onClick={() => setOpenBoxDialog(true)}
-                  className="cursor-pointer flex items-center gap-2"
-                >
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setOpenBoxDialog(true)} className="cursor-pointer">
                   <Box />
                   Planilla de caja
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => setOpenTicketDialog(true)} className="cursor-pointer">
+                  <History />
+                  Ver registros de tickets
                 </DropdownMenuItem>
               </DropdownMenuGroup>
 
               <DropdownMenuSeparator />
 
-                <DropdownMenuItem
-                  onSelect={(e) => {
-                    e.preventDefault(); 
-                    setOpenTicketDialog(true);
-                  }}
-                  className="cursor-pointer flex items-center gap-2"
-                >
-                  <TicketIcon />
-                  Ver Registros de Tickets
-                </DropdownMenuItem>
-                <TicketTableDialog
-                  ticketRegistrationForDay={ticketRegistrationsDayOrWeek}
-                  open={openTicketDialog}
-                  setOpen={setOpenTicketDialog}
-                />
-                 <DropdownMenuSeparator />
-              <>
-              <Link href={'/notes'}>
-                <DropdownMenuGroup>
-                  <DropdownMenuItem
-                    className="cursor-pointer flex items-center gap-2 relative"
-                    onClick={clearNoteAlert}
-                  >
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link href="/notes" onClick={clearNoteAlert}>
                     <AlertCircle />
                     Avisos
                     {hasNewNoteAlert && (
-                      <span className="absolute top-1 right-1 text-red-500">
-                        <BellDot size={16} />
+                      <span className="ml-auto flex items-center text-red-500" title="Hay avisos nuevos">
+                        <BellDot />
+                        <span className="sr-only">Hay avisos nuevos</span>
                       </span>
                     )}
-                  </DropdownMenuItem>
-                </DropdownMenuGroup>
-              </Link>
-                  <DropdownMenuSeparator />
-                </>
-                
-                <>
-                
-                <Link href={userNav.role === 'ADMIN' ? '/admin/users' : '/admin/other-payments'}>
-                    <DropdownMenuGroup>
-                      <DropdownMenuItem className="cursor-pointer flex items-center gap-2">
-                        <Shield />
-                        {userNav.role === 'ADMIN' ? 'Administar' : 'Administrar Gastos'}
-                      </DropdownMenuItem>
-                    </DropdownMenuGroup>
                   </Link>
-                  <DropdownMenuSeparator />
-                </>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild className="cursor-pointer">
+                  <Link href={isAdmin ? '/admin/users' : '/admin/other-payments'}>
+                    <Shield />
+                    {isAdmin ? 'Administrar' : 'Administrar gastos'}
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+
+              <DropdownMenuSeparator />
+
               <DropdownMenuItem
-                onClick={() => signOut()}
-                className="cursor-pointer flex items-center gap-2"
+                onSelect={() => signOut()}
+                className="cursor-pointer text-red-400 focus:text-red-400"
               >
                 <LogOut />
                 Cerrar sesión
               </DropdownMenuItem>
-
             </DropdownMenuContent>
           </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
+      {/* Fuera del menú: se abren al elegir la opción y siguen abiertos aunque el menú se cierre. */}
       <BoxListDialog open={openBoxDialog} setOpen={setOpenBoxDialog} />
+      <TicketTableDialog
+        ticketRegistrationForDay={ticketRegistrationsDayOrWeek}
+        open={openTicketDialog}
+        setOpen={setOpenTicketDialog}
+      />
     </>
   );
 }

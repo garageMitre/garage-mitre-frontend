@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { FileText } from 'lucide-react';
 import { PaymentSummaryTable } from './payment-summary-customer-table';
 import { Customer } from '@/types/cutomer.type';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -48,7 +49,8 @@ export const PaymentSummaryCell = ({ customer }: { customer: Customer }) => {
 
   return (
     <PaymentSummaryTable customer={customer} autoOpen={autoOpen}>
-      <span className="text-gray-500 hover:underline cursor-pointer">Ver Resumen</span>
+      <FileText className="size-3.5" aria-hidden="true" />
+      Ver resumen
     </PaymentSummaryTable>
   );
 };

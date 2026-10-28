@@ -1,5 +1,6 @@
 'use client';
 
+import { Plus } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import {
   Dialog,
@@ -144,7 +145,8 @@ const monthOptions = Array.from({ length: 12 }).map((_, i) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" onClick={() => setOpen(true)}>
+        <Button className="h-9 gap-1.5 rounded-lg" onClick={() => setOpen(true)}>
+          <Plus className="size-4" />
           Crear Propietario
         </Button>
       </DialogTrigger>

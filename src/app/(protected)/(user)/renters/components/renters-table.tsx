@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/table';
 import { DataTablePagination } from '@/components/ui/data-table-pagination';
 import { useEffect, useState } from 'react';
-import { Input } from '@/components/ui/input';
+import { TableSearchInput } from '@/components/ui/table-search-input';
 import { DataTableViewOptions } from '@/components/ui/data-table-view-options';
 import { CreateRenterDialog } from './create-renter-dialog';
 import { useSearchParams } from 'next/navigation';
@@ -73,17 +73,14 @@ export function RentersTable<TData, TValue>({
 
   return (
     <div className="flex flex-col space-y-4 sm:space-y-6 pt-4">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-0">
-        <Input
-          placeholder="Filtrar por apellido..."
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <TableSearchInput
+          placeholder="Buscar por apellido…"
           value={(table.getColumn('lastName')?.getFilterValue() as string) ?? ''}
-          onChange={(event) =>
-            table.getColumn('lastName')?.setFilterValue(event.target.value)
-          }
-          className="w-full sm:max-w-sm rounded-xl bg-secondary border-white"
+          onChange={(value) => table.getColumn('lastName')?.setFilterValue(value)}
         />
 
-        <div className="flex items-center justify-between sm:justify-end gap-4 sm:flex-1">
+        <div className="flex items-center justify-between sm:justify-end gap-2 sm:flex-1">
           <DataTableViewOptions table={table} />
           <CreateRenterDialog customersRenters={customersRenters}/>
         </div>
@@ -92,7 +89,7 @@ export function RentersTable<TData, TValue>({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-secondary/40 hover:bg-secondary/40">
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id} className="whitespace-nowrap">
@@ -114,6 +111,7 @@ export function RentersTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
+                  className="transition-colors hover:bg-secondary/30"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="whitespace-nowrap">
@@ -129,7 +127,7 @@ export function RentersTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={table.getVisibleFlatColumns().length}
-                  className="h-24 text-center text-sm sm:text-base"
+                  className="h-24 text-center text-sm text-muted-foreground"
                 >
                   No hay resultados para mostrar.
                 </TableCell>

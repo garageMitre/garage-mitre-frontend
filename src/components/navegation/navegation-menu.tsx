@@ -1,94 +1,66 @@
 'use client';
 
-import {
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
-import { SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
-import { BarChart3, ChevronsUpDown, Home, Key, KeyIcon, ShieldCheck, Users } from 'lucide-react';
-import Link from 'next/link';
-import { BoxListDialog } from '../box-list-dialog';
 import { useState } from 'react';
+import Link from 'next/link';
 import { useSession } from 'next-auth/react';
+import { BarChart3, ChevronDown, Home, Key, ShieldCheck, Users } from 'lucide-react';
+import { DropdownMenuGroup, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { cn } from '@/lib/utils';
 
-export function NavigationMenuDemo({ setIsExpanded }: { setIsExpanded: (state: boolean) => void }) {
-  const [menuOpen, setMenuOpen] = useState(false);
-  // "Ver métricas" lleva a /admin/clientes, que solo puede abrir un administrador.
+// Grupo «Clientes» del menú del usuario: se despliega ahí mismo, sin abrir otro menú. Los ítems
+// son ítems reales del menú (navegables con flechas y Enter) en vez de botones sueltos.
+export function ClientesMenuGroup() {
+  const [open, setOpen] = useState(false);
+  // «Ver métricas» lleva a /admin/clientes, que solo puede abrir un administrador.
   const { data: session } = useSession();
   const isAdmin = session?.user?.role?.toUpperCase() === 'ADMIN';
 
-  const handleToggleMenu = () => {
-    const newState = !menuOpen;
-    setMenuOpen(newState);
-    setIsExpanded(newState);
-  };
-
   return (
-    <SidebarMenu>
-      <SidebarMenuItem>
-        <SidebarMenuButton
-          size="lg"
-          className=" w-full h-full text-center data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-          onClick={handleToggleMenu}
-        >
-                      <Users/>
-          <div className="hidden lg:grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">Clientes</span>
-          </div>
-          <ChevronsUpDown className="ml-auto size-4 mr-1" />
-        </SidebarMenuButton>
-
-        {menuOpen && (
-    <div className="w-[--radix-dropdown-menu-trigger-width] min-w-40 rounded-lg shadow-md mt-2">
-    <DropdownMenuSeparator />
     <DropdownMenuGroup>
-      <Link href="/owners">
-        <DropdownMenuItem className="cursor-pointer flex items-center gap-2 pl-4">
-          <Home size={18} />
-          Propietarios
-        </DropdownMenuItem>
-      </Link>
-    </DropdownMenuGroup>
+      <DropdownMenuItem
+        aria-expanded={open}
+        // Desplegar no cierra el menú: solo muestra u oculta las opciones de clientes.
+        onSelect={(event) => {
+          event.preventDefault();
+          setOpen((value) => !value);
+        }}
+        className="cursor-pointer font-semibold"
+      >
+        <Users />
+        Clientes
+        <ChevronDown className={cn('ml-auto transition-transform duration-200', open && 'rotate-180')} />
+      </DropdownMenuItem>
 
-    <DropdownMenuSeparator />
-
-    <DropdownMenuGroup>
-      <Link href="/renters">
-        <DropdownMenuItem className="cursor-pointer flex items-center gap-2 pl-4">
-          <Key size={18} />
-          Inquilinos
-        </DropdownMenuItem>
-      </Link>
-    </DropdownMenuGroup>
-
-    <DropdownMenuSeparator />
-
-    <DropdownMenuGroup>
-      <Link href="/privates">
-        <DropdownMenuItem className="cursor-pointer flex items-center gap-2 pl-4">
-        <ShieldCheck size={24} />
-          Inquilinos de Terceros
-        </DropdownMenuItem>
-      </Link>
-    </DropdownMenuGroup>
-
-    {isAdmin && (
-      <>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <Link href="/admin/clientes">
-            <DropdownMenuItem className="cursor-pointer flex items-center gap-2 pl-4 text-yellow-400">
-              <BarChart3 size={18} />
-              Ver métricas
+      {open && (
+        <div className="ml-[15px] border-l border-border pl-1.5">
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/owners">
+              <Home />
+              Propietarios
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/renters">
+              <Key />
+              Inquilinos
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild className="cursor-pointer">
+            <Link href="/privates">
+              <ShieldCheck />
+              Inquilinos de terceros
+            </Link>
+          </DropdownMenuItem>
+          {isAdmin && (
+            <DropdownMenuItem asChild className="cursor-pointer text-yellow-400 focus:text-yellow-400">
+              <Link href="/admin/clientes">
+                <BarChart3 />
+                Ver métricas
+              </Link>
             </DropdownMenuItem>
-          </Link>
-        </DropdownMenuGroup>
-      </>
-    )}
-  </div>
-        )}
-      </SidebarMenuItem>
-    </SidebarMenu>
+          )}
+        </div>
+      )}
+    </DropdownMenuGroup>
   );
 }

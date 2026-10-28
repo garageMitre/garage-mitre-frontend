@@ -259,12 +259,14 @@ export function PaymentSummaryTable({
     <>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogTrigger asChild>
-          <span
-            className="text-gray-500 hover:underline cursor-pointer"
+          {/* Botón real (antes un span): se puede abrir con el teclado y se lee como acción. */}
+          <button
+            type="button"
             onClick={() => setOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            {children || 'Ver Resumen'}
-          </span>
+            {children || 'Ver resumen'}
+          </button>
         </DialogTrigger>
 
         <DialogContent className="max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-full max-w-6xl">

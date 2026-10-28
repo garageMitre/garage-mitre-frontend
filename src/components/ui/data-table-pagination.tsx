@@ -21,9 +21,13 @@ interface DataTablePaginationProps<TData> {
 export function DataTablePagination<TData>({
   table,
 }: DataTablePaginationProps<TData>) {
+  const total = table.getFilteredRowModel().rows.length;
   return (
     <div className="flex items-center justify-center px-2">
-      <div className="flex items-center space-x-6 lg:space-x-8">
+      <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:gap-x-8">
+        <p className="text-sm text-muted-foreground tabular-nums">
+          {total} {total === 1 ? 'resultado' : 'resultados'}
+        </p>
         <div className="flex items-center space-x-2">
           <p className="text-sm font-medium">Filas por página</p>
           <Select
@@ -67,9 +71,10 @@ export function DataTablePagination<TData>({
             <span className="sr-only">Ir a la página anterior</span>
             <ChevronLeftIcon className="h-4 w-4" />
           </Button>
-          <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+          {/* Sin resultados la tabla tiene 0 páginas; se muestra «1 de 1» en vez de «1 de 0». */}
+          <div className="flex min-w-[100px] items-center justify-center text-sm font-medium tabular-nums">
             Página {table.getState().pagination.pageIndex + 1} de{' '}
-            {table.getPageCount()}
+            {Math.max(1, table.getPageCount())}
           </div>
           <Button
             variant="outline"
