@@ -5,7 +5,7 @@ import { RentersTable } from './components/renters-table';
 import { renterColumns } from './components/renter-columns';
 import { findReceipts, getCustomers, getCustomerVehicleRenter } from '@/services/customers.service';
 import { CUSTOMER_TYPE } from '@/types/cutomer.type';
-import { DropdownMenuAction } from '../components/customers/drop-menu-actions';
+import { CustomerActionsBar } from '../components/customers/drop-menu-actions';
 
 
 export default async function RenterPage() {
@@ -25,7 +25,7 @@ export default async function RenterPage() {
         </div>
       </div>
       <div className="mb-4">
-        <DropdownMenuAction customers={customers || []} type='RENTER' receipts={receipts || []} />
+        <CustomerActionsBar customers={customers || []} type='RENTER' receipts={receipts || []} />
       </div>
       <RentersTable
         columns={renterColumns}

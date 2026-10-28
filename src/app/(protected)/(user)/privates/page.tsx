@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic"
 export const fetchCache = "force-no-store"
 import { CreditCardIcon } from 'lucide-react';
 import { findReceipts, getCustomers, getCustomerThird, getCustomerVehicleRenter } from '@/services/customers.service';
-import { DropdownMenuAction } from '../components/customers/drop-menu-actions';
+import { CustomerActionsBar } from '../components/customers/drop-menu-actions';
 import { CUSTOMER_TYPE } from '@/types/cutomer.type';
 import { privateColumns } from './components/private-columns';
 import { PrivatesTable } from './components/privates-table';
@@ -25,7 +25,7 @@ export default async function PrivatePage() {
         </div>
       </div>
       <div className="mb-4">
-        <DropdownMenuAction customers={customers || []} type='PRIVATE' receipts={receipts || []} />
+        <CustomerActionsBar customers={customers || []} type='PRIVATE' receipts={receipts || []} />
       </div>
       <PrivatesTable
         columns={privateColumns}

@@ -5,7 +5,7 @@ import { findReceipts, getCustomers, getParkingTypes } from '@/services/customer
 import { OwnersTable } from './components/owners-table';
 import { OwnerColumns } from './components/owner-columns';
 import { CUSTOMER_TYPE } from '@/types/cutomer.type';
-import { DropdownMenuAction } from '../components/customers/drop-menu-actions';
+import { CustomerActionsBar } from '../components/customers/drop-menu-actions';
 
 
 export default async function OwnerPage() {
@@ -26,7 +26,7 @@ export default async function OwnerPage() {
         </div>
       </div>
       <div className="mb-4">
-        <DropdownMenuAction customers={customers || []} type='OWNER' receipts={receipts || []} />
+        <CustomerActionsBar customers={customers || []} type='OWNER' receipts={receipts || []} />
       </div>
       <OwnersTable
         columns={OwnerColumns}
