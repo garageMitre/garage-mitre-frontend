@@ -176,7 +176,7 @@ export function UpdateUserDailog({ user }: { user: User }) {
     <DialogTrigger asChild>
     <Button
             variant="ghost"
-            className="w-full justify-start"
+            className="w-full justify-start gap-2 px-2 font-normal"
             size="sm"
             onClick={() => setOpen(true)}
           >

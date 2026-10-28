@@ -74,12 +74,12 @@ export const ticketColumns: ColumnDef<Ticket>[] = [
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">Abrir acciones</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-full">
-            <DropdownMenuLabel className="text-sm">Acciones</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Acciones</DropdownMenuLabel>
             <UpdateTicketDialog ticket={ticket} />
             {session?.user.role === 'ADMIN' &&(
               <DeleteTicketDialog ticket={ticket} />

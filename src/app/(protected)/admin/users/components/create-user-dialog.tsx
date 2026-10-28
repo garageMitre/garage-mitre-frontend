@@ -25,7 +25,7 @@ import { createCustomerAction } from '@/actions/customers/create-customer.action
 import { customerSchema, CustomerSchemaType } from '@/schemas/customer.schema';
 import { registerSchema, RegisterSchemaType } from '@/schemas/auth/register.schema';
 import { registerAction } from '@/actions/auth/register.action';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Plus } from 'lucide-react';
 
 export function CreateUserDialog() {
   const [error, setError] = useState<string | undefined>('');
@@ -70,7 +70,8 @@ export function CreateUserDialog() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" onClick={() => setOpen(true)}>
+        <Button className="h-9 gap-1.5 rounded-lg" onClick={() => setOpen(true)}>
+          <Plus className="size-4" />
           Crear Usuario
         </Button>
       </DialogTrigger>

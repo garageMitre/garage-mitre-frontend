@@ -95,7 +95,7 @@ export function UpdateParkingTypeDailog({ parkingType }: { parkingType: ParkingT
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" className="w-full justify-start" size="sm" onClick={() => setOpen(true)}>
+        <Button variant="ghost" className="w-full justify-start gap-2 px-2 font-normal" size="sm" onClick={() => setOpen(true)}>
           Editar
         </Button>
       </DialogTrigger>

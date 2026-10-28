@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/table';
 import { DataTablePagination } from '@/components/ui/data-table-pagination';
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
+import { TableSearchInput } from '@/components/ui/table-search-input';
 import { DataTableViewOptions } from '@/components/ui/data-table-view-options';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { CreateUserDialog } from './create-user-dialog';
@@ -61,24 +61,22 @@ export function UsersTable<TData, TValue>({
 
   return (
     <div className="flex flex-col space-y-4 sm:space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <Input
-          placeholder="Filtrar emails..."
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <TableSearchInput
+          placeholder="Buscar por email…"
           value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
-          onChange={(event) =>
-            table.getColumn('email')?.setFilterValue(event.target.value)
-          }
-          className="w-full sm:max-w-sm rounded-xl bg-secondary border-white"
+          onChange={(value) => table.getColumn('email')?.setFilterValue(value)}
         />
-
-        <DataTableViewOptions table={table} />
-        <CreateUserDialog />
+        <div className="flex items-center justify-between sm:justify-end gap-2 sm:flex-1">
+          <DataTableViewOptions table={table} />
+          <CreateUserDialog />
+        </div>
       </div>
       <ScrollArea className="rounded-xl border bg-background">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-secondary/40 hover:bg-secondary/40">
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id} className="first:pl-4 last:pr-4">
@@ -100,6 +98,7 @@ export function UsersTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
+                  className="transition-colors hover:bg-secondary/30"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="first:pl-4 last:pr-4">
@@ -115,7 +114,7 @@ export function UsersTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center text-sm text-muted-foreground"
                 >
                   No hay resultados para mostrar.
                 </TableCell>

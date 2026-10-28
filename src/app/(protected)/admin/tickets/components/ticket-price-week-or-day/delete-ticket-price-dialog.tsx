@@ -69,7 +69,7 @@ export function DeleteTicketPriceWeekOrDayDialog({ ticketPrice }: { ticketPrice:
         <DialogTrigger asChild>
           <Button
             variant="ghost"
-            className="w-full justify-start"
+            className="w-full justify-start gap-2 px-2 font-normal text-red-500 hover:text-red-500"
             size="sm"
             onClick={() => setOpen(true)}
           >
@@ -114,7 +114,7 @@ export function DeleteTicketPriceWeekOrDayDialog({ ticketPrice }: { ticketPrice:
                 </Button>
                 <Button
                   type="submit"
-                  variant="default"
+                  variant="destructive"
                   size="sm"
                   disabled={isPending}
                 >

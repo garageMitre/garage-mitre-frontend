@@ -54,7 +54,7 @@ export const ExportTicketsExcel = ({ tickets }: Props) => {
   return (
     <Button
       variant="ghost"
-      className="w-full justify-start"
+      className="w-full justify-start gap-2 px-2 font-normal"
       size="sm"
       onClick={handleExport}
     >

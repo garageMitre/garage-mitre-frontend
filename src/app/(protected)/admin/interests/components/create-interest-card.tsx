@@ -56,7 +56,7 @@ export default function CardInterest({ className, interests }: { className?: str
     };
 
     return (
-        <Card className={`w-3/5 h-full flex flex-col ${className} mx-auto my-auto flex justify-center`}>
+        <Card className={`w-full max-w-2xl h-full flex flex-col ${className} mx-auto my-auto flex justify-center`}>
             <CardHeader>
                 <CardTitle>Gestionar intereses de los inquilinos y propietarios</CardTitle>
                 <CardDescription>El número de intereses que escribas se suma cada 10 días. El interes se aplica a los clientes que se excedan de los 10 dias despues del dia 1 de cada mes.</CardDescription>
@@ -70,11 +70,14 @@ export default function CardInterest({ className, interests }: { className?: str
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="flex items-center gap-2">
-                                        Intereses Propietarios 
-                                        <span className="text-green-600 flex items-center gap-1">
-                                            {interests?.[0]?.interestOwner }
-                                            <ArrowUp className="w-4 h-4 text-green-600" />
-                                        </span>
+                                        Intereses Propietarios
+                                        {/* El valor vigente solo si ya hay uno cargado (antes quedaba la flecha sola). */}
+                                        {interests?.[0]?.interestOwner != null && (
+                                            <span className="text-green-600 flex items-center gap-1" title="Valor vigente">
+                                                {interests[0].interestOwner}
+                                                <ArrowUp className="w-4 h-4 text-green-600" />
+                                            </span>
+                                        )}
                                     </FormLabel>
                                     <FormControl>
                                         <Input disabled={isPending} {...field} />
@@ -89,11 +92,13 @@ export default function CardInterest({ className, interests }: { className?: str
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel className="flex items-center gap-2">
-                                        Intereses Inquilinos 
-                                        <span className="text-green-600 flex items-center gap-1">
-                                            {interests?.[0]?.interestRenter}
-                                            <ArrowUp className="w-4 h-4 text-green-600" />
-                                        </span>
+                                        Intereses Inquilinos
+                                        {interests?.[0]?.interestRenter != null && (
+                                            <span className="text-green-600 flex items-center gap-1" title="Valor vigente">
+                                                {interests[0].interestRenter}
+                                                <ArrowUp className="w-4 h-4 text-green-600" />
+                                            </span>
+                                        )}
                                     </FormLabel>
                                     <FormControl>
                                         <Input disabled={isPending} {...field} />

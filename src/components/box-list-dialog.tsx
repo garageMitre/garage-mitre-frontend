@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -14,7 +15,10 @@ import { useSession } from "next-auth/react";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
-import { Edit2, Check } from "lucide-react";
+import { Edit2, Check, Printer } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { es } from "date-fns/locale";
+import "dayjs/locale/es";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -116,14 +120,16 @@ export function BoxListDialog({ open, setOpen }: BoxListDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-h-[80vh] sm:max-h-[90vh] overflow-y-auto w-full max-w-md sm:max-w-lg">
-        <DialogHeader className="items-center mt-4">
-          <DialogTitle>Elegir fecha</DialogTitle>
+      <DialogContent className="max-h-[90vh] overflow-y-auto w-full max-w-md">
+        <DialogHeader>
+          <DialogTitle>Planilla de caja</DialogTitle>
+          <DialogDescription>Elegí el día que querés imprimir.</DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col items-center gap-4 p-4">
+        <div className="flex flex-col items-center gap-4">
           <Calendar
             mode="single"
+            locale={es}
             selected={selectedDate}
             onSelect={(day) => {
               if (day && day <= new Date()) setSelectedDate(day);
@@ -131,25 +137,37 @@ export function BoxListDialog({ open, setOpen }: BoxListDialogProps) {
             disabled={(day) => day > new Date()}
             modifiers={{ today: new Date() }}
             modifiersClassNames={{
-              today: "bg-blue-400 text-white font-bold",
-              selected: "bg-accent text-white border border-accent-foreground",
+              today: "border border-yellow-400/60 font-semibold text-yellow-400",
+              selected: "!bg-yellow-400 !text-black font-semibold",
             }}
-            className="rounded-lg border shadow-md p-4"
+            // date-fns en español escribe el mes en minúscula («octubre 2026»).
+            classNames={{ caption_label: "text-sm font-medium capitalize" }}
+            className="rounded-lg border p-3"
           />
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {/* Qué día quedó elegido y si tiene caja: antes solo se veía el error. */}
+          <div className="w-full rounded-lg border bg-secondary/40 px-4 py-3 text-sm" aria-live="polite">
+            <p className="text-xs uppercase tracking-wide text-muted-foreground">Día seleccionado</p>
+            <p className="mt-0.5 font-medium first-letter:uppercase">
+              {dayjs(selectedDate).locale("es").format("dddd D [de] MMMM YYYY")}
+            </p>
+            {error ? (
+              <p className="mt-1 text-xs text-red-400">{error}</p>
+            ) : boxData ? (
+              <p className="mt-1 text-xs text-muted-foreground">Caja N° {boxData.boxNumber}</p>
+            ) : (
+              <p className="mt-1 text-xs text-muted-foreground">Buscando la caja del día…</p>
+            )}
+          </div>
 
-          <button
+          <Button
             onClick={handlePrintPdf}
             disabled={!boxData}
-            className={`block w-3/4 rounded-md p-3 text-white ${
-              boxData
-                ? "bg-accent hover:bg-accent-hover focus:bg-accent-focus"
-                : "bg-gray-400 cursor-not-allowed"
-            }`}
+            className="w-full gap-2 bg-yellow-400 text-black hover:bg-yellow-300"
           >
-            Imprimir Planilla de caja
-          </button>
+            <Printer className="size-4" />
+            Imprimir planilla de caja
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -69,7 +69,7 @@ export function TicketsPriceTable<TData, TValue>({
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
+              <TableRow key={headerGroup.id} className="bg-secondary/40 hover:bg-secondary/40">
                 {headerGroup.headers.map((header) => {
                   return (
                     <TableHead key={header.id} className="first:pl-4 last:pr-4">
@@ -91,6 +91,7 @@ export function TicketsPriceTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
+                  className="transition-colors hover:bg-secondary/30"
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className="first:pl-4 last:pr-4">
@@ -106,7 +107,7 @@ export function TicketsPriceTable<TData, TValue>({
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="h-24 text-center text-sm text-muted-foreground"
                 >
                   No hay resultados para mostrar.
                 </TableCell>
