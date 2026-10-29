@@ -30,8 +30,20 @@ export default async function ClientesPage({
   const to = start.endOf('month').format('YYYY-MM-DD');
   const labelRaw = start.format('MMMM YYYY');
   const monthLabel = labelRaw.charAt(0).toUpperCase() + labelRaw.slice(1);
+  const prevStart = start.subtract(1, 'month');
 
-  const receipts = await findReceipts({ from, to });
+  // El mes anterior solo se usa para la comparación ("+10 pts vs agosto"); si falla, no se muestra.
+  const [receipts, previousReceipts] = await Promise.all([
+    findReceipts({ from, to }),
+    findReceipts({ from: prevStart.startOf('month').format('YYYY-MM-DD'), to: prevStart.endOf('month').format('YYYY-MM-DD') }),
+  ]);
+  const previous = previousReceipts
+    ? {
+        label: prevStart.format('MMMM'),
+        paid: previousReceipts.filter((r) => r.status === 'PAID').length,
+        total: previousReceipts.length,
+      }
+    : null;
 
   return (
     <div className="container mx-auto px-4 py-4 sm:p-6">
@@ -50,7 +62,7 @@ export default async function ClientesPage({
           No se pudieron cargar los recibos. Intentá nuevamente.
         </p>
       ) : (
-        <ReceiptsByTypeChart month={month} monthLabel={monthLabel} receipts={receipts} />
+        <ReceiptsByTypeChart month={month} monthLabel={monthLabel} receipts={receipts} previous={previous} />
       )}
     </div>
   );
