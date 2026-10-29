@@ -10,6 +10,19 @@ export default {
   theme: {
   	extend: {
   		colors: {
+  			// Paleta de la rama design; por ahora la usa el admin de tarifas (Tickets).
+  			gm: {
+  				yellow: 'hsl(var(--gm-yellow))',
+  				'yellow-deep': 'hsl(var(--gm-yellow-deep))',
+  				orange: 'hsl(var(--gm-orange))',
+  				'orange-deep': 'hsl(var(--gm-orange-deep))',
+  				ink: 'hsl(var(--gm-ink))',
+  				surface: 'hsl(var(--gm-surface))',
+  				'surface-2': 'hsl(var(--gm-surface-2))',
+  				'surface-3': 'hsl(var(--gm-surface-3))',
+  				line: 'hsl(var(--gm-line))',
+  				'line-strong': 'hsl(var(--gm-line-strong))'
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

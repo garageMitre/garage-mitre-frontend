@@ -94,6 +94,48 @@ body {
   }
 }
 
+/* Paleta y utilidades de la rama design (las usa el admin de tarifas). */
+:root {
+  --gm-yellow: 46 92% 53%;
+  --gm-yellow-deep: 42 92% 47%;
+  --gm-orange: 14 80% 51%;
+  --gm-orange-deep: 14 80% 40%;
+  --gm-ink: 30 78% 7%;
+  --gm-surface: 32 22% 9%;
+  --gm-surface-2: 34 22% 12%;
+  --gm-surface-3: 34 18% 14%;
+  --gm-line: 34 18% 18%;
+  --gm-line-strong: 34 16% 28%;
+}
+
+@layer utilities {
+  .gm-display {
+    font-family: var(--font-display), system-ui, sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+  }
+  .gm-mono {
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-feature-settings: 'tnum';
+  }
+  .gm-tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  .gm-stripes {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      hsl(var(--gm-yellow)) 0 8px,
+      hsl(var(--gm-ink)) 8px 16px
+    );
+  }
+  .gm-page-glow {
+    background-image:
+      radial-gradient(ellipse at 15% 0%, hsl(var(--gm-yellow) / 0.07), transparent 45%),
+      radial-gradient(ellipse at 90% 90%, hsl(var(--gm-orange) / 0.08), transparent 50%);
+  }
+}
+
 /* Loader: cada círculo sale hacia su ángulo (--dx, --dy) y vuelve. Es CSS y no JS para que
    arranque en el acto aunque React esté ocupado con una navegación. */
 @keyframes loader-breathe {
