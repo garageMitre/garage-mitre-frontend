@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ReactNode } from 'react';
 import { currentUser } from '@/lib/auth';
 import { NavUser } from './nav-user';
+import { BrandLogo } from '@/components/brand-logo';
 import { NotificationSidebar } from '@/app/(protected)/(user)/components/notifications-sidebar';
 import { getTicketsRegistrationForDay } from '@/services/tickets.service';
 
@@ -30,21 +31,18 @@ export async function AppNavbar({ children, adminSidebar, userSidebar }: AppNavb
       {sidebar}
       {/* min-w-0: sin esto una tabla ancha estira toda la página en el celular en vez de desplazarse sola. */}
       <SidebarInset className="flex min-w-0 flex-col">
-        <header className="relative flex h-14 items-center gap-2 border-b shadow-sm px-4 md:px-6">
+        {/* Fijo arriba al desplazarse; el fondo translúcido deja ver que hay contenido debajo. */}
+        <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/85 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/70 md:px-6">
           {sidebar && <SidebarTrigger className="size-9 shrink-0 rounded-lg md:hidden" aria-label="Abrir menú" />}
-          <div className="flex items-center w-full justify-between">
-            <Link href="/tickets">
-               <div className={`flex items-center space-x-2 mt-3 mb-2 ${sidebar ? 'ml-1 md:ml-20' : 'ml-20'}`}>
-                 <div className="bg-yellow-400 px-3 py-1 rounded-md shadow-md">
-                   <span className="text-black text-lg font-bold">GARAGE</span>
-                 </div>
-                  <span className="text-white text-lg font-semibold">MITRE</span>
-                </div>
-             </Link>
+          <div className="flex w-full items-center justify-between gap-4">
+            <Link
+              href="/tickets"
+              aria-label="Garage Mitre, ir a tickets"
+              className="rounded-md outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-yellow-400 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <BrandLogo />
+            </Link>
             <div className="flex items-center gap-6">
-              <div>
-             {/* <NotificationSidebar/> */}
-              </div>
               <NavUser
                 userNav={{
                   avatar: user?.image ?? '',
