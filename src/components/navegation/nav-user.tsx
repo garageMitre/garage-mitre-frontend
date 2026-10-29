@@ -1,42 +1,22 @@
 "use client";
-import { useState } from 'react';
-import {
-  AlertCircle,
-  BellDot,
-  Box,
-  ChevronsUpDown,
-  History,
-  LogOut,
-  Shield,
-  TicketIcon,
-} from 'lucide-react';
+import { LogOut, Shield } from 'lucide-react';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from '@/components/ui/sidebar';
 import { signOut } from 'next-auth/react';
 import Link from 'next/link';
 import { User } from 'next-auth';
-import { ClientesMenuGroup } from './navegation-menu';
-import { BoxListDialog } from '../box-list-dialog';
-import { useNotifications } from '@/hooks/use-notification';
-import { TicketTableDialog } from '@/app/(protected)/(user)/tickets/tickets-days-or-weeks/ticket-table-dialog';
-import { TicketRegistrationForDay } from '@/types/ticket-registration-for-day.type';
 
+// Cuenta del usuario: solo el avatar en la barra; nombre, email y opciones de la cuenta en el menú.
+// Las secciones y acciones del día están en TopNav.
 export function NavUser({
   userNav,
-  ticketRegistrationsDayOrWeek
 }: {
   userNav: {
     name: string;
@@ -44,11 +24,7 @@ export function NavUser({
     avatar: string;
     role: User['role'];
   };
-  ticketRegistrationsDayOrWeek : TicketRegistrationForDay[]
 }) {
-  const [openBoxDialog, setOpenBoxDialog] = useState(false);
-  const [openTicketDialog, setOpenTicketDialog] = useState(false);
-  const { hasNewNoteAlert, clearNoteAlert } = useNotifications();
   const isAdmin = userNav.role === 'ADMIN';
   // Dos letras como máximo («Ignacio Gaute» → «IG»), aunque el nombre tenga más palabras.
   const initials = userNav.name
@@ -59,103 +35,53 @@ export function NavUser({
     .join('');
 
   return (
-    <>
-      <SidebarMenu>
-        <SidebarMenuItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <SidebarMenuButton
-                size="lg"
-                className="w-70 data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-              >
-                <Avatar className="h-8 w-8 rounded-lg">
-                  <AvatarImage src={userNav.avatar} alt={userNav.name} />
-                  <AvatarFallback className="rounded-lg bg-yellow-400/15 text-xs font-semibold text-yellow-400">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="hidden lg:grid flex-1 text-left text-sm leading-tight" title={`${userNav.name} · ${userNav.email}`}>
-                  <span className="truncate font-semibold">{userNav.name}</span>
-                  <span className="truncate text-xs text-muted-foreground">{userNav.email}</span>
-                </div>
-                <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
-              </SidebarMenuButton>
-            </DropdownMenuTrigger>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Cuenta de ${userNav.name}`}
+          title={`${userNav.name} · ${userNav.email}`}
+          className="grid size-10 shrink-0 place-items-center rounded-full outline-none ring-offset-2 ring-offset-background transition-shadow hover:ring-2 hover:ring-yellow-400/50 focus-visible:ring-2 focus-visible:ring-yellow-400 data-[state=open]:ring-2 data-[state=open]:ring-yellow-400"
+        >
+          <Avatar className="size-9">
+            <AvatarImage src={userNav.avatar} alt="" />
+            <AvatarFallback className="bg-yellow-400/15 text-xs font-bold text-yellow-400">{initials}</AvatarFallback>
+          </Avatar>
+        </button>
+      </DropdownMenuTrigger>
 
-            <DropdownMenuContent
-              className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-              side="bottom"
-              align="center"
-              sideOffset={8}
-            >
-              {isAdmin && (
-                <>
-                  <ClientesMenuGroup />
-                  <DropdownMenuSeparator />
-                </>
-              )}
-
-              {/* Operación del día */}
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href="/tickets">
-                    <TicketIcon />
-                    Tickets
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setOpenBoxDialog(true)} className="cursor-pointer">
-                  <Box />
-                  Planilla de caja
-                </DropdownMenuItem>
-                <DropdownMenuItem onSelect={() => setOpenTicketDialog(true)} className="cursor-pointer">
-                  <History />
-                  Ver registros de tickets
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuGroup>
-                <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href="/notes" onClick={clearNoteAlert}>
-                    <AlertCircle />
-                    Avisos
-                    {hasNewNoteAlert && (
-                      <span className="ml-auto flex items-center text-red-500" title="Hay avisos nuevos">
-                        <BellDot />
-                        <span className="sr-only">Hay avisos nuevos</span>
-                      </span>
-                    )}
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild className="cursor-pointer">
-                  <Link href={isAdmin ? '/admin/users' : '/admin/other-payments'}>
-                    <Shield />
-                    {isAdmin ? 'Administrar' : 'Administrar gastos'}
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuItem
-                onSelect={() => signOut()}
-                className="cursor-pointer text-red-400 focus:text-red-400"
-              >
-                <LogOut />
-                Cerrar sesión
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </SidebarMenuItem>
-      </SidebarMenu>
-      {/* Fuera del menú: se abren al elegir la opción y siguen abiertos aunque el menú se cierre. */}
-      <BoxListDialog open={openBoxDialog} setOpen={setOpenBoxDialog} />
-      <TicketTableDialog
-        ticketRegistrationForDay={ticketRegistrationsDayOrWeek}
-        open={openTicketDialog}
-        setOpen={setOpenTicketDialog}
-      />
-    </>
+      <DropdownMenuContent align="end" sideOffset={10} className="w-72 rounded-xl p-0">
+        <div className="flex items-center gap-3 px-3.5 pb-3 pt-3.5">
+          <Avatar className="size-10">
+            <AvatarImage src={userNav.avatar} alt="" />
+            <AvatarFallback className="bg-yellow-400/15 text-sm font-bold text-yellow-400">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 leading-snug">
+            <p className="truncate text-sm font-semibold">{userNav.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{userNav.email}</p>
+          </div>
+        </div>
+        {isAdmin && (
+          <div className="px-3.5 pb-3">
+            <span className="rounded-full border border-yellow-400/30 bg-yellow-400/10 px-2 py-0.5 text-[11px] font-semibold text-yellow-400">
+              Administrador
+            </span>
+          </div>
+        )}
+        <DropdownMenuSeparator className="my-0" />
+        <div className="p-1.5">
+          <DropdownMenuItem asChild className="cursor-pointer gap-3 py-2">
+            <Link href={isAdmin ? '/admin/users' : '/admin/other-payments'}>
+              <Shield />
+              {isAdmin ? 'Administrar' : 'Administrar gastos'}
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => signOut()} className="cursor-pointer gap-3 py-2 text-red-400 focus:text-red-400">
+            <LogOut />
+            Cerrar sesión
+          </DropdownMenuItem>
+        </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

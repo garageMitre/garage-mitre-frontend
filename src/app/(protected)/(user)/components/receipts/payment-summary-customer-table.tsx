@@ -50,6 +50,7 @@ import { PaymentTypeReceiptDialog } from './payment-type-receipt-dialog';
 import { Receipt } from '@/types/receipt.type';
 import { ReceiptMovementsDrawer } from './receipt-movements-drower';
 import { DeleteReceiptDialog } from './delete-receipt-dialog';
+import { Loader } from '@/components/ui/loader';
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -459,7 +460,7 @@ export function PaymentSummaryTable({
                 ) : (
                   <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center text-sm text-muted-foreground">
-                      {isPending ? 'Cargando recibos…' : 'No hay recibos registrados.'}
+                      {isPending ? <Loader size="sm" label="Cargando recibos…" className="py-4" /> : 'No hay recibos registrados.'}
                     </TableCell>
                   </TableRow>
                 )}

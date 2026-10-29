@@ -1,65 +1,49 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
+const ANGLES = [0, 60, 120, 180, 240, 300];
+
+// El dibujo está pensado para 48px; los otros tamaños lo escalan entero.
+const SCALE = { sm: 0.6, md: 1, lg: 1.35 } as const;
+
 interface LoaderProps extends React.HTMLAttributes<HTMLDivElement> {
-  size?: 'sm' | 'md' | 'lg';
+  size?: keyof typeof SCALE;
+  /** Texto visible debajo; si no hay, igual se anuncia "Cargando…" a lectores de pantalla. */
+  label?: string;
 }
 
-const Loader: React.FC<LoaderProps> = ({
-  className,
-  size = 'md',
-  ...props
-}) => {
+// Seis círculos que "respiran" hacia afuera, en los amarillos de la marca. La animación
+// (loader-breathe) está en globals.css.
+const Loader: React.FC<LoaderProps> = ({ className, size = 'md', label, ...props }) => {
+  const box = 48 * SCALE[size];
+
   return (
-    <div
-      className={cn(
-        'flex items-center justify-center',
-        {
-          'w-8 h-8': size === 'sm',
-          'w-12 h-12': size === 'md',
-          'w-16 h-16': size === 'lg',
-        },
-        className,
-      )}
-      {...props}
-    >
-      <div className="relative">
-        {/* Outer circle (stadium) */}
+    <div role="status" className={cn('flex flex-col items-center justify-center gap-3', className)} {...props}>
+      <div className="relative shrink-0" style={{ width: box, height: box }}>
         <div
-          className={cn(
-            'border-t-4 border-orange-400 rounded-full animate-spin',
-            {
-              'w-8 h-8': size === 'sm',
-              'w-12 h-12': size === 'md',
-              'w-16 h-16': size === 'lg',
-            },
-          )}
-        ></div>
-
-        {/* Inner circle (ball) */}
-        <div
-          className={cn(
-            'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-full animate-bounce',
-            {
-              'w-2 h-2': size === 'sm',
-              'w-3 h-3': size === 'md',
-              'w-4 h-4': size === 'lg',
-            },
-          )}
-        ></div>
-
-        {/* Field lines */}
-        <div
-          className={cn(
-            'absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 border-slate-400 rounded-full',
-            {
-              'w-6 h-6': size === 'sm',
-              'w-9 h-9': size === 'md',
-              'w-12 h-12': size === 'lg',
-            },
-          )}
-        ></div>
+          aria-hidden="true"
+          className="absolute left-0 top-0 flex h-12 w-12 origin-top-left items-center justify-center"
+          style={{ transform: `scale(${SCALE[size]})` }}
+        >
+          {ANGLES.map((angle, idx) => (
+            <div
+              key={angle}
+              className={cn('loader-dot absolute h-3.5 w-3.5 rounded-full', idx % 2 === 0 ? 'bg-yellow-400/40' : 'bg-amber-300/40')}
+              style={
+                {
+                  '--dx': `${(Math.cos((angle * Math.PI) / 180) * 11).toFixed(2)}px`,
+                  '--dy': `${(Math.sin((angle * Math.PI) / 180) * 11).toFixed(2)}px`,
+                } as React.CSSProperties
+              }
+            />
+          ))}
+        </div>
       </div>
+      {label ? (
+        <span className="text-sm text-muted-foreground">{label}</span>
+      ) : (
+        <span className="sr-only">Cargando…</span>
+      )}
     </div>
   );
 };

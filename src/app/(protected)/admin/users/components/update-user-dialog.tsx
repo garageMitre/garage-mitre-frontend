@@ -39,6 +39,7 @@ import { useCurrentUser } from '@/hooks/auth/use-current-user';
 import { updateUserAction } from '@/actions/users/update-user.action';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { User } from '@/types/user.type';
+import { Loader } from '@/components/ui/loader';
 
 export function UpdateUserDailog({ user }: { user: User }) {
   const session = useSession();
@@ -76,7 +77,7 @@ export function UpdateUserDailog({ user }: { user: User }) {
   }
 
   if (session.status === 'loading') {
-    return <div>Cargando...</div>;
+    return <Loader size="sm" className="py-6" />;
   }
 
   const checkUsername = async (username: string) => {

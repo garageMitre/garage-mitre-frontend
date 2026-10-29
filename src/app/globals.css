@@ -93,3 +93,26 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Loader: cada círculo sale hacia su ángulo (--dx, --dy) y vuelve. Es CSS y no JS para que
+   arranque en el acto aunque React esté ocupado con una navegación. */
+@keyframes loader-breathe {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(var(--dx), var(--dy)) scale(1.75);
+  }
+}
+
+.loader-dot {
+  animation: loader-breathe 3.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loader-dot {
+    animation: none;
+    transform: translate(calc(var(--dx) * 0.7), calc(var(--dy) * 0.7)) scale(1.4);
+  }
+}

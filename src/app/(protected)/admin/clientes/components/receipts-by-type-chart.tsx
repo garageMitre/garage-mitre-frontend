@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Receipt } from '@/types/receipt.type';
 import { cn } from '@/lib/utils';
+import { Loader } from '@/components/ui/loader';
 import { ReceiptsMonthFilter } from './receipts-month-filter';
 import { ReceiptsDetailDialog } from './receipts-detail-dialog';
 import { CUSTOMER_TYPE_LABEL, CUSTOMER_TYPE_ORDER } from './customer-types';
@@ -223,7 +224,13 @@ export function ReceiptsByTypeChart({
       </div>
 
       {/* Mientras llega el mes nuevo se atenúa lo de abajo; el cambio en sí lo muestran las animaciones. */}
-      <div className={cn('flex flex-col gap-6 transition-opacity duration-200', isPending && 'opacity-60')}>
+      <div className="relative">
+      {isPending && (
+        <div className="absolute inset-0 z-10 grid place-items-center">
+          <Loader />
+        </div>
+      )}
+      <div className={cn('flex flex-col gap-6 transition-opacity duration-200', isPending && 'opacity-40')}>
         <div className="space-y-2.5">
           <div
             role="img"
@@ -255,6 +262,7 @@ export function ReceiptsByTypeChart({
             <TypeTile key={t.type} label={CUSTOMER_TYPE_LABEL[t.type]} paid={t.paid} total={t.total} ready={ready} />
           ))}
         </div>
+      </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-4 border-t pt-3 font-mono text-[11px] text-muted-foreground">

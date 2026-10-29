@@ -24,7 +24,7 @@ export function NavSidebar({
 }: React.ComponentProps<typeof Sidebar> & { title: string; sections: NavSection[]; footer?: NavItem }) {
   return (
     <Sidebar collapsible="icon" {...props}>
-      <SidebarHeader className="h-14 flex-row items-center gap-2 border-b px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
+      <SidebarHeader className="h-16 flex-row items-center gap-2 border-b px-3 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-0">
         <SidebarTrigger className="size-8 shrink-0 rounded-lg transition-colors hover:bg-gradient-to-r hover:from-primary/20 hover:to-primary/10 hover:text-white" />
         <span className="truncate text-sm font-semibold group-data-[collapsible=icon]:hidden">{title}</span>
       </SidebarHeader>

@@ -19,6 +19,7 @@ import { Edit2, Check, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { es } from "date-fns/locale";
 import "dayjs/locale/es";
+import { Loader } from "@/components/ui/loader";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -156,7 +157,7 @@ export function BoxListDialog({ open, setOpen }: BoxListDialogProps) {
             ) : boxData ? (
               <p className="mt-1 text-xs text-muted-foreground">Caja N° {boxData.boxNumber}</p>
             ) : (
-              <p className="mt-1 text-xs text-muted-foreground">Buscando la caja del día…</p>
+              <Loader size="sm" label="Buscando la caja del día…" className="mt-2 flex-row justify-start gap-2" />
             )}
           </div>
 
