@@ -101,11 +101,12 @@ body {
   --gm-orange: 14 80% 51%;
   --gm-orange-deep: 14 80% 40%;
   --gm-ink: 30 78% 7%;
-  --gm-surface: 32 22% 9%;
-  --gm-surface-2: 34 22% 12%;
-  --gm-surface-3: 34 18% 14%;
-  --gm-line: 34 18% 18%;
-  --gm-line-strong: 34 16% 28%;
+  /* Superficies y líneas en los grises de la app (en design eran cálidas, tirando a marrón). */
+  --gm-surface: 0 0% 7%;
+  --gm-surface-2: 0 0% 11%;
+  --gm-surface-3: 0 0% 14%;
+  --gm-line: 0 0% 18%;
+  --gm-line-strong: 0 0% 26%;
 }
 
 @layer utilities {
