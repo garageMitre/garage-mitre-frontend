@@ -20,7 +20,7 @@ export const expenseColumns: ColumnDef<OtherPayment>[] = [
   {
     accessorKey: 'description',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="Descipcion" />
+      <DataTableColumnHeader column={column} title="Descripción" />
     ),
     cell: ({ row }) => (
       <div className="min-w-[100px] text-sm">{row.getValue('description')}</div>

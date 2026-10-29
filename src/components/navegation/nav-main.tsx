@@ -1,126 +1,60 @@
 'use client';
 
-import React from 'react';
-import { ChevronRight, type LucideIcon } from 'lucide-react';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
+import { type LucideIcon } from 'lucide-react';
 import {
   SidebarGroup,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-interface NavItem {
+export interface NavItem {
   title: string;
   url: string;
-  icon?: LucideIcon | React.ReactNode | (() => React.JSX.Element);
-  isActive?: boolean;
-  items?: {
-    title: string;
-    url: string;
-  }[];
+  icon: LucideIcon;
 }
 
-export function NavMain({ items }: { items: NavItem[] }) {
-  const pathname = usePathname();
-  const [mounted, setMounted] = React.useState(false);
+// La barra amarilla marca la página actual también con el menú colapsado (solo íconos).
+const itemClass =
+  'relative h-10 gap-3 rounded-lg px-3 font-medium text-foreground/75 transition-colors ' +
+  'hover:bg-gradient-to-r hover:from-primary/20 hover:to-primary/10 hover:text-white ' +
+  'data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/30 data-[active=true]:to-primary/20 data-[active=true]:text-white ' +
+  '[&>svg]:size-[18px] [&[data-active=true]>svg]:text-yellow-400 ' +
+  'before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-yellow-400 before:opacity-0 data-[active=true]:before:opacity-100';
 
-  React.useEffect(() => {
-    setMounted(true);
-  }, []);
+export function NavMain({ label, items }: { label?: string; items: NavItem[] }) {
+  const pathname = usePathname();
+  const { isMobile, setOpenMobile } = useSidebar();
 
   return (
-    <SidebarGroup>
-      <SidebarMenu>
-        {items.map((item) => {
-          const isActive = mounted && pathname === item.url;
-          const hasActiveChild =
-            mounted && item.items?.some((subItem) => pathname === subItem.url);
-
-          if (!item.items?.length) {
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  tooltip={item.title}
-                  isActive={isActive}
-                  className="group relative flex w-full items-center rounded-md px-2 py-6 text-sm font-medium transition-all duration-200 hover:bg-gradient-to-r hover:from-primary/20 hover:to-primary/10 hover:text-white data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/30 data-[active=true]:to-primary/20 data-[active=true]:text-white"
-                >
-                  <Link
-                    href={item.url}
-                    className="flex items-center w-full gap-x-3"
-                  >
-                    {item.icon && (
-                      <div className="flex h-5 w-5 items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                        {typeof item.icon === 'function'
-                          ? item.icon({})
-                          : item.icon}
-                      </div>
-                    )}
-                    <span className="truncate group-[[data-collapsible=icon]]/sidebar:hidden">
-                      {item.title}
-                    </span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            );
-          }
-
+    <SidebarGroup className="py-1">
+      {label && (
+        <SidebarGroupLabel className="text-[11px] uppercase tracking-wider text-muted-foreground/70">
+          {label}
+        </SidebarGroupLabel>
+      )}
+      <SidebarMenu className="gap-1">
+        {items.map(({ title, url, icon: Icon }) => {
+          // Las subpáginas (p. ej. /admin/clientes/...) también marcan su sección.
+          const isActive = pathname === url || pathname.startsWith(`${url}/`);
           return (
-            <Collapsible
-              key={item.title}
-              asChild
-              defaultOpen={hasActiveChild}
-              className="group/collapsible"
-            >
-              <SidebarMenuItem>
-                <CollapsibleTrigger asChild>
-                  <SidebarMenuButton
-                    tooltip={item.title}
-                    isActive={hasActiveChild}
-                    className="group relativeflex items-center rounded-l-full px-4 py-8 text-sm font-medium transition-all duration-200 hover:bg-gradient-to-r data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/30 data-[active=true]:to-primary/20 data-[active=true]:text-white"
-                  >
-                    {item.icon && (
-                      <div className="flex h-7 w-5 items-center justify-center transition-transform duration-200 group-hover:scale-110">
-                        {typeof item.icon === 'function'
-                          ? item.icon({})
-                          : item.icon}
-                      </div>
-                    )}
-                    <span className="ml-10 truncate group-[[data-collapsible=icon]]/sidebar:hidden">
-                      {item.title}
-                    </span>
-                    <ChevronRight className="ml-auto h-5 w-5 shrink-0 transition-all duration-200 text-muted-foreground/50 group-hover:text-primary group-data-[state=open]/collapsible:rotate-90 group-[[data-collapsible=icon]]/sidebar:hidden" />
-                  </SidebarMenuButton>
-                </CollapsibleTrigger>
-                <CollapsibleContent className="animate-accordion-down group-[[data-collapsible=icon]]/sidebar:hidden">
-                  <SidebarMenuSub>
-                    {item.items?.map((subItem) => (
-                      <SidebarMenuSubItem key={subItem.title}>
-                        <SidebarMenuSubButton
-                          asChild
-                          isActive={mounted && pathname === subItem.url}
-                          className="group flex w-full items-center rounded-md px-4 py-2 pl-12 text-sm font-medium transition-all duration-200 hover:bg-gradient-to-r hover:text-white data-[active=true]:bg-gradient-to-r data-[active=true]:from-primary/30 data-[active=true]:to-primary/20 data-[active=true]:text-white"
-                        >
-                          <Link href={subItem.url}>
-                            <span className="truncate">{subItem.title}</span>
-                          </Link>
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    ))}
-                  </SidebarMenuSub>
-                </CollapsibleContent>
-              </SidebarMenuItem>
-            </Collapsible>
+            <SidebarMenuItem key={url}>
+              <SidebarMenuButton asChild tooltip={title} isActive={isActive} className={itemClass}>
+                <Link
+                  href={url}
+                  aria-current={isActive ? 'page' : undefined}
+                  // En el celular el menú es un panel: se cierra al elegir una página.
+                  onClick={() => isMobile && setOpenMobile(false)}
+                >
+                  <Icon />
+                  <span>{title}</span>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           );
         })}
       </SidebarMenu>

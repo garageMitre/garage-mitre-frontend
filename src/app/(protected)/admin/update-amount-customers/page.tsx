@@ -1,22 +1,21 @@
 export const dynamic = "force-dynamic"
 export const fetchCache = "force-no-store"
-import { Banknote, CreditCardIcon, DollarSignIcon, User, Wallet } from 'lucide-react';
-import UpdateAmountCustomerCard from './components/update-amount-customer-card';
+import { DollarSignIcon } from 'lucide-react';
+import { UpdateAmountPanel } from './components/update-amount-panel';
 
-export default async function OtherPaymentPage() {  
-
+export default async function UpdateAmountCustomersPage() {
   return (
     <div className="container mx-auto px-4 py-4 sm:p-6">
       <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-3 mb-6 sm:mb-8 bg-secondary/50 p-4 sm:p-6 rounded-xl backdrop-blur-sm">
-        <DollarSignIcon  className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+        <DollarSignIcon className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold">Actualizar Montos</h1>
-        <p className="text-sm sm:text-base text-muted-foreground mt-1">
-           Actualizar Monto Inquilinos.
+          <h1 className="text-xl sm:text-2xl font-bold">Actualizar montos</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-1">
+            Cambios masivos del alquiler de los inquilinos.
           </p>
         </div>
       </div>
-      <UpdateAmountCustomerCard/>
+      <UpdateAmountPanel />
     </div>
   );
 }

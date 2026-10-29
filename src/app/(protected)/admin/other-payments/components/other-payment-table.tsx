@@ -23,6 +23,7 @@ import {
 import { DataTablePagination } from '@/components/ui/data-table-pagination';
 import { useState } from 'react';
 import { TableSearchInput } from '@/components/ui/table-search-input';
+import { CreateOtherPaymentDialog } from './create-other-payment-dialog';
 import { DataTableViewOptions } from '@/components/ui/data-table-view-options';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 
@@ -74,6 +75,7 @@ export function ExpenseTable<TData, TValue>({
         />
         <div className="flex items-center justify-between sm:justify-end gap-2 sm:flex-1">
           <DataTableViewOptions table={table} />
+          <CreateOtherPaymentDialog />
         </div>
       </div>
       <ScrollArea className="rounded-xl border bg-background">

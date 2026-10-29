@@ -3,7 +3,7 @@ export const fetchCache = "force-no-store"
 import { CreditCardIcon, User, Wallet } from 'lucide-react';
 import { getCustomers, getinterests, getParkingTypes } from '@/services/customers.service';
 import { getUsers } from '@/services/users.service';
-import CardInterest from './components/create-interest-card';
+import { InterestsPanel } from './components/interests-panel';
 
 
 export default async function InterestPage() {
@@ -21,7 +21,7 @@ export default async function InterestPage() {
           </p>
         </div>
       </div>
-      <CardInterest interests={interests}/>
+      <InterestsPanel interests={interests || []} />
     </div>
   );
 }
