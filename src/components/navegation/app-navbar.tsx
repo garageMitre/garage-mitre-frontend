@@ -36,9 +36,7 @@ export async function AppNavbar({ children, adminSidebar, userSidebar }: AppNavb
           >
             <BrandLogo />
           </Link>
-          <span aria-hidden="true" className="hidden h-6 w-px bg-border md:block" />
           <TopNav
-            isAdmin={user?.role === 'ADMIN'}
             userNav={{
               avatar: user?.image ?? '',
               email: user?.email ?? '',
@@ -49,8 +47,6 @@ export async function AppNavbar({ children, adminSidebar, userSidebar }: AppNavb
           />
         </header>
         {children}
-        {/* Lugar para la barra de secciones fija de abajo en el celular. */}
-        <div aria-hidden="true" className="h-16 shrink-0 md:hidden" />
       </SidebarInset>
     </>
   );
