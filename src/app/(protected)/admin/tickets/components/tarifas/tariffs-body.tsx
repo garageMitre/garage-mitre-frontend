@@ -32,7 +32,7 @@ export function TariffsBody({ initialPlan, loadError, onDraftChange }: { initial
   const previousInitial = useRef(initialPlan?.revision);
   const dirty = draft !== null && JSON.stringify(draft) !== baseDraft;
   const retiredMethod = draft !== null && !['CUSTOM', 'STARTED'].includes(tariffMethod(draft));
-  const errors = draft ? [...(retiredMethod ? ['Elegí Por hora o fracción o Lista de precios para continuar.'] : []), ...validateTariffDraft(draft, vehicles)] : [];
+  const errors = draft ? [...(retiredMethod ? ['Cargá los precios por hora o fracción para continuar.'] : []), ...validateTariffDraft(draft, vehicles)] : [];
   const hasPrices = current && (current.schedule.pricingOptions.charging.enabled ? current.schedule.pricingOptions.charging.rates.length : current.brackets.length) > 0;
 
   useEffect(() => { onDraftChange?.(draft !== null); }, [draft, onDraftChange]);
@@ -64,8 +64,9 @@ export function TariffsBody({ initialPlan, loadError, onDraftChange }: { initial
   const edit = () => {
     if (!current) return;
     const saved = copyDraft(current);
-    // Sin precios cargados se arranca por hora o fracción, la forma de cobro predeterminada.
-    const next = !saved.brackets.length && !saved.schedule.pricingOptions.charging.rates.length ? changeMethod(saved, 'STARTED') : saved;
+    // Solo se cobra por hora o fracción: aunque lo vigente sea una lista de precios, el borrador
+    // arranca en ese modo y al aplicarlo reemplaza a la lista.
+    const next = tariffMethod(saved) === 'STARTED' ? saved : changeMethod(saved, 'STARTED');
     setDraft(next); setBaseDraft(JSON.stringify(next)); setBaseRevision(current.revision); setConflict(false); setError('');
   };
   const discard = () => {

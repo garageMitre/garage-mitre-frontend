@@ -23,9 +23,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui-design/table';
-import { DataTablePagination } from '@/components/ui-design/data-table-pagination';
-import { DataTableViewOptions } from '@/components/ui-design/data-table-view-options';
+} from '@/components/ui/table';
+import { DataTablePagination } from '@/components/ui/data-table-pagination';
+import { DataTableViewOptions } from '@/components/ui/data-table-view-options';
 import { Input } from '@/components/ui-design/input';
 import { cn } from '@/lib/utils';
 
@@ -160,7 +160,7 @@ export function DataTableShell<TData, TValue>({
                       id={`table-row-${row.id}`}
                       data-state={row.getIsSelected() && 'selected'}
                       className={cn(
-                        row.getIsExpanded() && 'border-b-0 bg-gm-surface-2/20',
+                        row.getIsExpanded() && 'border-b-0 bg-muted/30',
                         highlightedRowId === row.id && 'bg-gm-yellow/10 transition-colors duration-1000',
                       )}
                     >

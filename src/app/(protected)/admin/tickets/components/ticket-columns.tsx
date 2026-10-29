@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui-design/button';
 import { Badge } from '@/components/ui/badge';
-import { DataTableColumnHeader } from '@/components/ui-design/data-table-column-header';
+import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,7 +34,8 @@ export const ticketColumns: ColumnDef<Ticket>[] = [
       <DataTableColumnHeader column={column} title="Vehículo" />
     ),
     cell: ({ row }) => (
-      <Badge variant="default">{row.getValue('vehicleType')}</Badge>
+      // Gris de la app, no el tono cálido de design: la tabla mantiene sus colores.
+      <Badge variant="default" className="bg-secondary">{row.getValue('vehicleType')}</Badge>
     ),
   },
   {
