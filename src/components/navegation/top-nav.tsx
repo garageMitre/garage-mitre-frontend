@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { BarChart3, Bell, Box, ChevronDown, History, Home, Key, ShieldCheck, TicketIcon, Users } from 'lucide-react';
+import { BarChart3, Bell, Box, ChevronDown, Home, Key, ShieldCheck, TicketIcon, Users } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ import { BoxListDialog } from '../box-list-dialog';
 import { useNotifications } from '@/hooks/use-notification';
 import { TicketTableDialog } from '@/app/(protected)/(user)/tickets/tickets-days-or-weeks/ticket-table-dialog';
 import { TicketRegistrationForDay } from '@/types/ticket-registration-for-day.type';
+import { NavUser } from './nav-user';
 
 const CLIENT_ROUTES = ['/owners', '/renters', '/privates', '/admin/clientes'];
 
@@ -29,9 +30,6 @@ const tabClass = (active: boolean) =>
     'after:absolute after:inset-x-2.5 after:-bottom-px after:h-0.5 after:rounded-full after:bg-yellow-400 after:transition-opacity',
     active ? 'font-semibold text-foreground after:opacity-100' : 'text-muted-foreground after:opacity-0 hover:text-foreground',
   );
-
-const actionClass =
-  'flex h-9 items-center gap-2 rounded-lg border px-2.5 text-[13px] font-medium text-foreground transition-colors hover:bg-secondary xl:px-3.5 [&>svg]:size-4';
 
 // Botón de la barra inferior del celular.
 const bottomClass = (active: boolean) =>
@@ -72,9 +70,11 @@ function ClientesMenu({ isAdmin, children, side = 'bottom' }: { isAdmin: boolean
 // En el celular las secciones pasan a una barra fija abajo.
 export function TopNav({
   isAdmin,
+  userNav,
   ticketRegistrationsDayOrWeek,
 }: {
   isAdmin: boolean;
+  userNav: React.ComponentProps<typeof NavUser>['userNav'];
   ticketRegistrationsDayOrWeek: TicketRegistrationForDay[];
 }) {
   const pathname = usePathname();
@@ -118,16 +118,9 @@ export function TopNav({
         </Link>
       </nav>
 
-      <div className="ml-auto flex items-center gap-2">
-        <button type="button" onClick={() => setOpenBoxDialog(true)} aria-label="Planilla de caja" title="Planilla de caja" className={cn(actionClass, 'hidden md:flex')}>
-          <Box />
-          <span className="hidden xl:inline">Planilla de caja</span>
-        </button>
-        <button type="button" onClick={() => setOpenTicketDialog(true)} aria-label="Ver registros de tickets" title="Ver registros de tickets" className={actionClass}>
-          <History />
-          <span className="hidden xl:inline">Ver registros de tickets</span>
-        </button>
-        <span aria-hidden="true" className="mx-1.5 hidden h-6 w-px bg-border md:block" />
+      {/* La planilla y los registros están en el menú de la cuenta; acá solo se abren los diálogos. */}
+      <div className="ml-auto flex items-center">
+        <NavUser userNav={userNav} onOpenBoxList={() => setOpenBoxDialog(true)} onOpenRegistrations={() => setOpenTicketDialog(true)} />
       </div>
 
       {/* Va al body con un portal: el backdrop-filter del header vuelve "fixed" relativo al header. */}

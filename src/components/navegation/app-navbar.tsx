@@ -3,7 +3,6 @@ import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import Link from 'next/link';
 import { ReactNode } from 'react';
 import { currentUser } from '@/lib/auth';
-import { NavUser } from './nav-user';
 import { TopNav } from './top-nav';
 import { BrandLogo } from '@/components/brand-logo';
 import { getTicketsRegistrationForDay } from '@/services/tickets.service';
@@ -38,14 +37,15 @@ export async function AppNavbar({ children, adminSidebar, userSidebar }: AppNavb
             <BrandLogo />
           </Link>
           <span aria-hidden="true" className="hidden h-6 w-px bg-border md:block" />
-          <TopNav isAdmin={user?.role === 'ADMIN'} ticketRegistrationsDayOrWeek={ticketRegistrationsDayOrWeek} />
-          <NavUser
+          <TopNav
+            isAdmin={user?.role === 'ADMIN'}
             userNav={{
               avatar: user?.image ?? '',
               email: user?.email ?? '',
               name: `${user?.firstName ?? ''} ${user?.lastName ?? ''}`,
               role: user?.role || 'USER',
             }}
+            ticketRegistrationsDayOrWeek={ticketRegistrationsDayOrWeek}
           />
         </header>
         {children}
