@@ -1,4 +1,5 @@
 import { useState, useTransition } from "react";
+import { CalendarPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -68,16 +69,17 @@ const onSubmit = async (values: TicketRegistrationForDaySchemaType) => {
   setIsDialogOpen(false);
 };
   return (
-    <div className="text-center mt-8">
+    <div className="text-center mt-7">
+      {/* Acción secundaria: borde amarillo para no competir con "Ingresar código manualmente". */}
       <Button
-      variant="default"
-      size="sm"
+      variant="outline"
       onClick={() => {
         setIsOpen(true);
         setIsDialogOpen(true);
       }}
-      className="bg-yellow-400 text-black hover:bg-yellow-500 text-black cursor-pointer text-lg font-bold"
+      className="h-11 w-full max-w-[440px] gap-2.5 rounded-xl border-yellow-400/45 bg-yellow-400/[0.06] px-5 text-sm font-semibold text-yellow-400 hover:bg-yellow-400/10 hover:text-yellow-300 sm:w-auto"
     >
+      <CalendarPlus className="size-[18px]" />
       Crear Ticket Por Día/semana
     </Button>
 

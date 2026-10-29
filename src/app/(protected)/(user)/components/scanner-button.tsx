@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { ReceiptSchemaType } from "@/schemas/receipt.schema";
 import { Receipt } from "@/types/receipt.type";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { Check, Keyboard, X } from "lucide-react";
 
 export default function ScannerButton({ isDialogOpen }: { isDialogOpen: boolean }) {
   const [isScanning, setIsScanning] = useState(false);
@@ -138,21 +139,13 @@ const handleConfirm = async (data: ReceiptSchemaType) => {
   
  return (
   <div className="flex flex-col items-center gap-4">
-    <p
-      className={`text-lg font-semibold ${
-        manualInputVisible
-          ? "text-yellow-400"
-          : isScanning
-          ? "text-yellow-400"
-          : "text-muted-foreground"
-      }`}
-    >
-      {manualInputVisible
-        ? "Ingreso manual activo"
-        : isScanning
-        ? "Escaneando..."
-        : ""}
-    </p>
+    {/* Estado del lector: solo aparece mientras escanea o con el ingreso manual abierto. */}
+    {(manualInputVisible || isScanning) && (
+      <p aria-live="polite" className="inline-flex items-center gap-2 rounded-full border border-yellow-400/35 bg-yellow-400/10 px-3 py-1 text-sm font-semibold text-yellow-400">
+        <span aria-hidden="true" className="size-1.5 animate-pulse rounded-full bg-yellow-400" />
+        {manualInputVisible ? "Ingreso manual activo" : "Escaneando..."}
+      </p>
+    )}
 
     {/* Solo mostrar el input invisible si no está activo el modo manual */}
     {!manualInputVisible && (
@@ -173,19 +166,26 @@ const handleConfirm = async (data: ReceiptSchemaType) => {
     )}
 
     <Button
-      variant="default"
-      size="sm"
+      variant={manualInputVisible ? "outline" : "default"}
       onClick={() => setManualInputVisible((prev) => !prev)}
-      className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer text-lg font-bold"
+      className={
+        manualInputVisible
+          ? "h-11 w-full max-w-[440px] gap-2.5 rounded-xl px-5 text-[15px] font-semibold sm:w-auto"
+          : "h-12 w-full max-w-[440px] gap-2.5 rounded-xl bg-yellow-400 px-5 text-[15px] font-bold text-black shadow-[inset_0_-2px_0_rgba(0,0,0,0.18),0_8px_24px_-10px_rgba(250,204,21,0.45)] hover:bg-yellow-300 sm:w-auto"
+      }
     >
+      {manualInputVisible ? <X className="size-[18px]" /> : <Keyboard className="size-[18px]" />}
       {manualInputVisible
         ? "Cancelar ingreso manual"
         : "Ingresar código manualmente"}
     </Button>
 
     {manualInputVisible && (
-      <div className="w-full max-w-md flex flex-col items-center gap-4 mt-4">
+      <div className="flex w-full max-w-[440px] flex-col items-stretch gap-3 rounded-2xl border bg-card p-4">
         <Input
+          autoFocus
+          aria-label="Código de barras"
+          className="h-11 rounded-lg font-mono text-base tracking-wider"
           value={manualBarCode}
           onChange={(e) => setManualBarCode(e.target.value)}
           onKeyDown={(e) => {
@@ -198,15 +198,14 @@ const handleConfirm = async (data: ReceiptSchemaType) => {
           placeholder="Ingrese el código manualmente"
         />
         <Button
-          size="sm"
-          variant="secondary"
           onClick={() => {
             handleSubmit(manualBarCode);
             setManualBarCode("");
             setManualInputVisible(false);
           }}
-          className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer text-lg font-bold"
+          className="h-11 gap-2 rounded-xl bg-yellow-400 text-[15px] font-bold text-black hover:bg-yellow-300"
         >
+          <Check className="size-[18px]" />
           Confirmar código
         </Button>
       </div>
