@@ -56,15 +56,15 @@ export default async function generateSimpleReport({
     const fontItalic = await pdfDoc.embedFont(StandardFonts.HelveticaOblique);
 
     // Misma paleta que "Listado de Caja".
-    const inkColor = rgb(0.129, 0.110, 0.078);
-    const brownColor = rgb(0.353, 0.263, 0.149);
-    const mutedColor = rgb(0.541, 0.478, 0.373);
-    const mutedText2 = rgb(0.361, 0.322, 0.255);
-    const borderLight = rgb(0.847, 0.816, 0.753);
-    const borderLighter = rgb(0.937, 0.914, 0.875);
-    const dashColor = rgb(0.659, 0.604, 0.502);
-    const badgeBg = rgb(0.941, 0.933, 0.918);
-    const totalsCardBg = rgb(0.957, 0.941, 0.902);
+    const inkColor = rgb(0.11, 0.11, 0.11);
+    const brownColor = rgb(0.28, 0.28, 0.28);
+    const mutedColor = rgb(0.49, 0.49, 0.49);
+    const mutedText2 = rgb(0.33, 0.33, 0.33);
+    const borderLight = rgb(0.82, 0.82, 0.82);
+    const borderLighter = rgb(0.92, 0.92, 0.92);
+    const dashColor = rgb(0.61, 0.61, 0.61);
+    const badgeBg = rgb(0.93, 0.93, 0.93);
+    const totalsCardBg = rgb(0.94, 0.94, 0.94);
 
     const marginLeft = 50;
     const marginRight = 545;
@@ -252,7 +252,7 @@ export default async function generateSimpleReport({
           y: cardTop - 18,
           size: 7.5,
           font: fontBold,
-          color: isLast ? rgb(0.886, 0.847, 0.769) : mutedColor,
+          color: isLast ? rgb(0.85, 0.85, 0.85) : mutedColor,
         });
         page.drawText(t.value, {
           x: x + 12,

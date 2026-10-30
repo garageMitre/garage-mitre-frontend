@@ -44,7 +44,7 @@ type ExportRow = {
   Nombre: string;
   '¿Pagó este mes?': string;
   'Monto Actual': string;
-  Dueño: string;
+  Propietario: string;
 };
 
 const exportTypeLabel: Record<'all' | 'paid' | 'unpaid', string> = {
@@ -140,7 +140,7 @@ export const ExportCustomersExcel = ({ receipts, type }: Props) => {
           Nombre: customer.firstName,
           '¿Pagó este mes?': receipt.status === 'PAID' ? 'Si' : 'No',
           'Monto Actual': receipt.price.toString(),
-          Dueño: ownerLabel,
+          Propietario: ownerLabel,
         });
       }
     }
@@ -199,14 +199,14 @@ export const ExportCustomersExcel = ({ receipts, type }: Props) => {
         { header: 'Nombre', width: 115 },
         { header: '¿Pagó?', width: 70 },
         { header: 'Monto', width: 90, align: 'right' },
-        { header: 'Dueño', width: 105 },
+        { header: 'Propietario', width: 105 },
       ],
       rows: finalRows.map((r) => [
         r.Apellido,
         r.Nombre,
         r['¿Pagó este mes?'],
         `$ ${r['Monto Actual']}`,
-        r.Dueño,
+        r.Propietario,
       ]),
       totals: [
         { label: 'Clientes', value: finalRows.length.toString() },
