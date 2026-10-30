@@ -11,7 +11,7 @@ import { toast } from '@/components/swipe-toast/toast';
 export type ReportColumn = {
   header: string;
   width: number;
-  align?: 'left' | 'right';
+  align?: 'left' | 'right' | 'center';
 };
 
 export type ReportTotal = { label: string; value: string };
@@ -68,18 +68,32 @@ export default async function generateSimpleReport({
 
     const marginLeft = 50;
     const marginRight = 545;
-    // Espacio reservado entre columnas — sin esto, una columna alineada a la derecha termina
-    // justo en el límite de la siguiente, que arranca en ese mismo punto: el texto de ambas
-    // queda pegado sin ningún espacio en el medio.
-    const CELL_PADDING = 10;
+    // Espacio entre columnas, repartido mitad a cada lado del límite: así una columna alineada
+    // a la derecha (un monto) nunca queda pegada a la siguiente alineada a la izquierda.
+    const GUTTER = 18;
 
-    // Posición x de cada columna, acumulando anchos de izquierda a derecha.
-    const colX: number[] = [];
+    // Los anchos pedidos se escalan para ocupar todo el ancho útil (de margen a margen).
+    const scale = (marginRight - marginLeft) / columns.reduce((sum, col) => sum + col.width, 0);
+    const boxes: { left: number; right: number }[] = [];
     let cursor = marginLeft;
-    for (const col of columns) {
-      colX.push(cursor);
-      cursor += col.width;
-    }
+    columns.forEach((col, i) => {
+      const width = col.width * scale;
+      boxes.push({
+        left: cursor + (i === 0 ? 0 : GUTTER / 2),
+        right: cursor + width - (i === columns.length - 1 ? 0 : GUTTER / 2),
+      });
+      cursor += width;
+    });
+
+    // Texto de una celda dentro de su caja, según la alineación de la columna.
+    const drawCell = (text: string, i: number, y: number, f: typeof font, size: number, color: typeof inkColor) => {
+      const { left, right } = boxes[i];
+      const fitted = truncateText(text, right - left, f, size);
+      const w = f.widthOfTextAtSize(fitted, size);
+      const align = columns[i].align ?? 'left';
+      const x = align === 'right' ? right - w : align === 'center' ? (left + right - w) / 2 : left;
+      page.drawText(fitted, { x, y, size, font: f, color });
+    };
 
     let yPosition = PAGE_HEIGHT - 50;
 
@@ -139,13 +153,7 @@ export default async function generateSimpleReport({
 
     const drawTableHeader = () => {
       const headerY = yPosition;
-      columns.forEach((col, i) => {
-        if (col.align === 'right') {
-          drawRightText(col.header.toUpperCase(), colX[i] + col.width - CELL_PADDING, headerY, fontBold, 8, mutedColor);
-        } else {
-          page.drawText(col.header.toUpperCase(), { x: colX[i], y: headerY, size: 8, font: fontBold, color: mutedColor });
-        }
-      });
+      columns.forEach((col, i) => drawCell(col.header.toUpperCase(), i, headerY, fontBold, 8, mutedColor));
       yPosition -= 6;
       page.drawLine({ start: { x: marginLeft, y: yPosition }, end: { x: marginRight, y: yPosition }, thickness: 0.75, color: borderLight });
       yPosition -= 16;
@@ -211,16 +219,7 @@ export default async function generateSimpleReport({
       rows.forEach((row) => {
         ensureSpace(50);
         const rowY = yPosition;
-        row.forEach((cell, i) => {
-          const col = columns[i];
-          const maxWidth = col.width - CELL_PADDING;
-          const text = truncateText(cell, maxWidth, font, 9.5);
-          if (col.align === 'right') {
-            drawRightText(text, colX[i] + col.width - CELL_PADDING, rowY, font, 9.5, inkColor);
-          } else {
-            page.drawText(text, { x: colX[i], y: rowY, size: 9.5, font, color: inkColor });
-          }
-        });
+        row.forEach((cell, i) => drawCell(cell, i, rowY, font, 9.5, inkColor));
         yPosition -= 18;
         page.drawLine({ start: { x: marginLeft, y: yPosition + 6 }, end: { x: marginRight, y: yPosition + 6 }, thickness: 0.5, color: borderLighter });
         yPosition -= 6;

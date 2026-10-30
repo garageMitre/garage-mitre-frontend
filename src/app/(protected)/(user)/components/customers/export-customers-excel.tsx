@@ -139,7 +139,8 @@ export const ExportCustomersExcel = ({ receipts, type }: Props) => {
           Apellido: customer.lastName,
           Nombre: customer.firstName,
           '¿Pagó este mes?': receipt.status === 'PAID' ? 'Si' : 'No',
-          'Monto Actual': receipt.price.toString(),
+          // Pagado: "price" queda en 0 (es el saldo pendiente); el monto del recibo es "startAmount".
+          'Monto Actual': (receipt.status === 'PAID' ? receipt.startAmount ?? receipt.price : receipt.price).toString(),
           Propietario: ownerLabel,
         });
       }
@@ -195,17 +196,17 @@ export const ExportCustomersExcel = ({ receipts, type }: Props) => {
       userName: session?.user.email ?? '',
       metaLine: `${monthLabel} ${selectedYear} · ${exportTypeLabel[exportType]}`,
       columns: [
-        { header: 'Apellido', width: 115 },
-        { header: 'Nombre', width: 115 },
-        { header: '¿Pagó?', width: 70 },
-        { header: 'Monto', width: 90, align: 'right' },
-        { header: 'Propietario', width: 105 },
+        { header: 'Apellido', width: 120 },
+        { header: 'Nombre', width: 120 },
+        { header: '¿Pagó?', width: 55, align: 'center' },
+        { header: 'Monto', width: 80, align: 'right' },
+        { header: 'Propietario', width: 120 },
       ],
       rows: finalRows.map((r) => [
         r.Apellido,
         r.Nombre,
         r['¿Pagó este mes?'],
-        `$ ${r['Monto Actual']}`,
+        `$ ${Number(r['Monto Actual'] || 0).toLocaleString('es-AR')}`,
         r.Propietario,
       ]),
       totals: [
