@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { ReactNode } from 'react';
 import { currentUser } from '@/lib/auth';
 import { TopNav } from './top-nav';
+import { HeaderClock } from './header-clock';
 import { BrandLogo } from '@/components/brand-logo';
 import { getTicketsRegistrationForDay } from '@/services/tickets.service';
 
@@ -36,6 +37,7 @@ export async function AppNavbar({ children, adminSidebar, userSidebar }: AppNavb
           >
             <BrandLogo />
           </Link>
+          <HeaderClock />
           <TopNav
             userNav={{
               avatar: user?.image ?? '',

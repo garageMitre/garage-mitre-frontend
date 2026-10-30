@@ -91,20 +91,29 @@ export function NavUser({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
+        {/* Botón de la cuenta: avatar, nombre y email (desde tablet) y la flecha en su propio círculo. */}
         <button
           type="button"
           aria-label={`Menú de ${userNav.name}`}
           title={`${userNav.name} · ${userNav.email}`}
-          className="group relative flex h-10 items-center gap-1.5 rounded-full border bg-secondary/30 py-0.5 pl-0.5 pr-2.5 outline-none transition-colors hover:border-yellow-400/50 focus-visible:ring-2 focus-visible:ring-yellow-400 data-[state=open]:border-yellow-400"
+          className="group flex h-12 items-center gap-3 rounded-full border border-white/10 bg-gradient-to-b from-white/[0.07] to-white/[0.02] py-1 pl-1 pr-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_8px_24px_-12px_rgba(0,0,0,0.8)] outline-none transition-all hover:border-yellow-400/40 hover:from-white/[0.1] focus-visible:ring-2 focus-visible:ring-yellow-400 data-[state=open]:border-yellow-400/70 sm:pr-2"
         >
-          <Avatar className="size-8">
-            <AvatarImage src={userNav.avatar} alt="" />
-            <AvatarFallback className="bg-yellow-400/15 text-xs font-bold text-yellow-400">{initials}</AvatarFallback>
-          </Avatar>
-          <ChevronDown aria-hidden="true" className="size-4 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
-          {hasNewNoteAlert && (
-            <span aria-hidden="true" className="absolute right-0 top-0 size-2.5 rounded-full bg-yellow-400 ring-2 ring-background" />
-          )}
+          <span className="relative shrink-0">
+            <Avatar className="size-10 ring-2 ring-yellow-400/35 ring-offset-2 ring-offset-background transition-shadow group-hover:ring-yellow-400/70">
+              <AvatarImage src={userNav.avatar} alt="" />
+              <AvatarFallback className="bg-gradient-to-br from-yellow-300 to-amber-500 text-sm font-extrabold text-black">{initials}</AvatarFallback>
+            </Avatar>
+            {hasNewNoteAlert && (
+              <span aria-hidden="true" className="absolute -right-0.5 -top-0.5 size-3 rounded-full bg-yellow-400 ring-2 ring-background" />
+            )}
+          </span>
+          <span className="hidden min-w-0 max-w-[220px] flex-col items-start text-left sm:flex">
+            <span className="w-full truncate text-sm font-semibold leading-tight">{userNav.name}</span>
+            <span className="w-full truncate text-xs leading-tight text-muted-foreground">{userNav.email}</span>
+          </span>
+          <span aria-hidden="true" className="grid size-7 shrink-0 place-items-center rounded-full bg-white/[0.06] text-muted-foreground transition-colors group-hover:bg-white/10 group-hover:text-foreground">
+            <ChevronDown className="size-4 transition-transform duration-200 group-data-[state=open]:rotate-180" />
+          </span>
         </button>
       </DropdownMenuTrigger>
 
@@ -116,7 +125,7 @@ export function NavUser({
         <div className="flex items-center gap-3 bg-secondary/30 px-4 py-3.5">
           <Avatar className="size-11">
             <AvatarImage src={userNav.avatar} alt="" />
-            <AvatarFallback className="bg-yellow-400/15 text-sm font-bold text-yellow-400">{initials}</AvatarFallback>
+            <AvatarFallback className="bg-gradient-to-br from-yellow-300 to-amber-500 text-sm font-extrabold text-black">{initials}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1 leading-snug">
             <p className="truncate text-sm font-semibold">{userNav.name}</p>
