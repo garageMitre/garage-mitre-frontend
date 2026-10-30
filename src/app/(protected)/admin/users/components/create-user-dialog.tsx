@@ -82,6 +82,7 @@ export function CreateUserDialog() {
         </DialogHeader>
         <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
           <FormField
             control={form.control}
             name="firstName"
@@ -108,6 +109,7 @@ export function CreateUserDialog() {
               </FormItem>
             )}
           />
+          </div>
           <FormField
             control={form.control}
             name="username"
@@ -134,6 +136,7 @@ export function CreateUserDialog() {
               </FormItem>
             )}
           />
+          <div className="grid gap-4 sm:grid-cols-2">
           <FormField
             control={form.control}
             name="password"
@@ -200,6 +203,7 @@ export function CreateUserDialog() {
               </FormItem>
             )}
           />
+          </div>
           <Button className="w-full" type="submit" disabled={isPending}>
             Crear Usuario
           </Button>

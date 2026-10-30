@@ -189,6 +189,7 @@ const monthOptions = Array.from({ length: 12 }).map((_, i) => {
             {/* Formulario de Cliente */}
             {phase === 'customer' && (
               <>
+                <div className="grid gap-4 sm:grid-cols-2">
                 <FormField
                   control={form.control}
                   name="firstName"
@@ -215,6 +216,7 @@ const monthOptions = Array.from({ length: 12 }).map((_, i) => {
                     </FormItem>
                   )}
                 />
+                </div>
                 <FormField
                   control={form.control}
                   name="phone"

@@ -42,9 +42,16 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    // El botón que envía un formulario es su acción principal: en amarillo, salvo que pida
+    // otra variante (p. ej. destructive) o traiga sus propias clases.
+    const primarySubmit = props.type === "submit" && (variant ?? "default") === "default"
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(
+          buttonVariants({ variant, size }),
+          primarySubmit && "bg-yellow-400 font-semibold text-black hover:bg-yellow-300",
+          className
+        )}
         ref={ref}
         {...props}
       />
