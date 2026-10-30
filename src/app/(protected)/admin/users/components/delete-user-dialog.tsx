@@ -23,7 +23,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { DeleteUserSchemaType, deleteUserSchema } from '@/schemas/user.schema';
 
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import { User } from '@/types/user.type';
 import { deleteUserAction } from '@/actions/users/delete-user.action';
 

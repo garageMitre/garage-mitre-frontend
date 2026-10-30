@@ -13,7 +13,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { BadgeCheckIcon, BadgeXIcon, MoreHorizontal } from 'lucide-react';
 import { TicketRegistrationForDay } from '@/types/ticket-registration-for-day.type';
 import { useState } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import { updateTicketRegistrationForDayStatusAction } from '@/actions/tickets/update-ticket-registration-for-day-status.action';
 import { DeleteTicketRegistrationForDayDialog } from './delete-registration-for-day-dialog';
 async function toggleFieldOnServer(

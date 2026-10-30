@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, startTransition } from "react";
 import { startScanner } from "@/services/scanner.service";
-import { toast } from "sonner";
+import { toast } from '@/components/swipe-toast/toast';
 import { getCustomerById } from "@/services/customers.service";
 import { historialReceiptsAction } from "@/actions/receipts/create-receipt.action";
 import { useSession } from "next-auth/react";

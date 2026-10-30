@@ -25,7 +25,7 @@ import { updateTicketAction } from '@/actions/tickets/update-ticket.action';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import { Loader2, Pencil, Ticket as TicketIcon } from 'lucide-react';
 
 export function UpdateTicketDialog({ ticket }: { ticket: Ticket }) {

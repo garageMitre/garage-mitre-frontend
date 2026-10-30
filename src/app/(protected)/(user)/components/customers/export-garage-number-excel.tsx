@@ -18,7 +18,7 @@ import { Customer } from '@/types/cutomer.type';
 import dayjs from 'dayjs';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import generateSimpleReport from '@/utils/generate-simple-report';
 
 dayjs.extend(utc);

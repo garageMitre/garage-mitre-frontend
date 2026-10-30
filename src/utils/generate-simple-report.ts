@@ -6,7 +6,7 @@
 // necesite exportar una tabla simple (clientes, cocheras, recibos, etc.) define sus columnas y
 // filas y obtiene el mismo look, en vez de reimplementar el dibujo de cero.
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 
 export type ReportColumn = {
   header: string;

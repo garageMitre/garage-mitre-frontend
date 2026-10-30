@@ -1,5 +1,5 @@
 import { PDFDocument, rgb } from 'pdf-lib';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import JsBarcode from 'jsbarcode';
 import { generateReceiptsManual, getCustomers } from '@/services/customers.service';
 import { CustomerType } from '@/types/cutomer.type';

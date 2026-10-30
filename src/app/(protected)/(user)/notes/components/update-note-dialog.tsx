@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { useState, useTransition } from 'react';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import {
   Form,
   FormControl,

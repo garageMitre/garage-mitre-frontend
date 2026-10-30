@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import { Receipt } from '@/types/receipt.type';
 import { deleteReceiptSchema, DeleteReceiptSchemaType } from '@/schemas/receipt.schema';
 import { deleteReceiptAction } from '@/actions/receipts/delete-receipt.action';

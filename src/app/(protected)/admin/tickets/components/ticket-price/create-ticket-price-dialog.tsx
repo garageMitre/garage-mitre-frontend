@@ -22,7 +22,7 @@ import { Input } from '@/components/ui-design/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import { Loader2, Plus } from 'lucide-react';
 import { ticketPriceSchema, TicketPriceSchemaType } from '@/schemas/ticket-price.schema';
 import { createTicketPriceAction } from '@/actions/tickets/create-ticket-price.action';

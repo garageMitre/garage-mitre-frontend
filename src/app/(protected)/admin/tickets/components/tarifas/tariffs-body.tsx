@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Pencil, Save, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import { Button } from '@/components/ui-design/button';
 import { getTariffPlanAction, saveTariffPlanAction } from '@/actions/tickets/tariff-plan.action';
 import { TARIFF_VEHICLES, type TariffDraft, type TariffPlan } from '@/types/tariff-plan.type';

@@ -21,7 +21,7 @@ import {
 import { Input } from '@/components/ui-design/input';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import { Trash2 } from 'lucide-react';
 import { ticketPrice } from '@/types/ticket-price';
 import { deleteTicketPriceSchema, DeleteTicketPriceSchemaType } from '@/schemas/ticket-price.schema';

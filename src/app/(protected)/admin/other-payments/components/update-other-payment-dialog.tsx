@@ -18,7 +18,7 @@ import {
   updateUserSchema,
   UpdateUserSchemaType,
 } from '@/schemas/user.schema';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import {
   Form,
   FormControl,

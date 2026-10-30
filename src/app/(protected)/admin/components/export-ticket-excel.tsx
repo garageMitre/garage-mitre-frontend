@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui-design/button';
 import * as XLSX from 'xlsx';
 import { saveAs } from 'file-saver';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import { Ticket } from '@/types/ticket.type';
 import { FileSpreadsheet } from 'lucide-react';
 

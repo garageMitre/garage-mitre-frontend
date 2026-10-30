@@ -24,7 +24,7 @@ import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import timezone from 'dayjs/plugin/timezone';
 import utc from 'dayjs/plugin/utc';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Receipt } from '@/types/receipt.type';
 import { CustomerType } from '@/types/cutomer.type';

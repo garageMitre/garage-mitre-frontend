@@ -42,7 +42,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { toast } from 'sonner';
+import { toast } from '@/components/swipe-toast/toast';
 import { cancelReceiptAction } from '@/actions/receipts/cancel-receipt.action';
 import { ReceiptSchemaType } from '@/schemas/receipt.schema';
 import { historialReceiptsAction } from '@/actions/receipts/create-receipt.action';

@@ -1,7 +1,7 @@
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { ThemeProvider } from '@/components/theme-provider';
-import { Toaster as SonnerToaster } from '@/components/ui/sonner';
+import { SwipeToaster } from '@/components/swipe-toast/toast';
 import { Toaster } from '@/components/ui/toaster';
 import { cookies } from 'next/headers';
 import { Metadata } from 'next';
@@ -53,7 +53,7 @@ export default async function RootLayout({
         >
           {children}
         </ThemeProvider>
-        <SonnerToaster />
+        <SwipeToaster />
         <Toaster />
       </body>
     </html>

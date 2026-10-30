@@ -5,7 +5,7 @@ import type { ReceiptPayment } from "@/types/receipt.type"
 import type { TicketRegistrationForDay } from "@/types/ticket-registration-for-day.type"
 import type { TicketRegistration } from "@/types/ticket-registration.type"
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib"
-import { toast } from "sonner"
+import { toast } from '@/components/swipe-toast/toast'
 
 type SubtotalSummaryItem = {
   key: string
