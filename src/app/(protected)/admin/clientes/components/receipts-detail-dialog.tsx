@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ExternalLink, ListFilter } from 'lucide-react';
+import { ExternalLink, FileDown, ListFilter } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import generateSimpleReport from '@/utils/generate-simple-report';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +25,8 @@ const FILTERABLE_PAYMENT_TYPES = Object.entries(PAYMENT_TYPE_LABEL).filter(([val
 
 const ars = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+// Para el PDF: las fuentes estándar no codifican todos los espacios especiales que puede usar Intl.
+const pdfArs = (n: number) => ars(n).replace(/[\u00a0\u202f]/g, ' ');
 
 // Un recibo puede tener varios pagos parciales con distinto medio: si coinciden se muestra ese
 // medio, si no, "Mixto".
@@ -55,6 +59,8 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
   const [open, setOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'PAID' | 'PENDING'>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [downloading, setDownloading] = useState(false);
+  const { data: session } = useSession();
 
   const paidCount = receipts.filter((r) => r.status === 'PAID').length;
   const pendingCount = receipts.length - paidCount;
@@ -82,6 +88,52 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
 
   const totalShown = grouped.reduce((sum, g) => sum + g.rows.length, 0);
 
+  // PDF con lo mismo que muestra el diálogo: el mes, los filtros elegidos y los recibos en el
+  // mismo orden (por tipo de cliente y apellido).
+  const downloadPdf = async () => {
+    const rows = grouped.flatMap((g) => g.rows.map((r) => ({ type: g.type, r })));
+    const paid = rows.filter(({ r }) => r.status === 'PAID').length;
+    const total = rows.reduce((sum, { r }) => sum + resolveAmount(r), 0);
+    const statusLabel = statusFilter === 'all' ? 'Todos los estados' : statusFilter === 'PAID' ? 'Pagados' : 'Pendientes';
+    const paymentLabel = paymentFilter === 'all' ? 'Todos los medios de pago' : PAYMENT_TYPE_LABEL[paymentFilter] ?? paymentFilter;
+    setDownloading(true);
+    try {
+      await generateSimpleReport({
+        kicker: 'MÉTRICAS DE CLIENTES',
+        title: `Recibos de ${monthLabel}`,
+        userName: session?.user?.email ?? '',
+        metaLine: `${statusLabel} · ${paymentLabel}`,
+        columns: [
+          { header: 'Tipo', width: 85 },
+          { header: 'Cliente', width: 150 },
+          { header: 'Estado', width: 70, align: 'center' },
+          { header: 'Medio de pago', width: 95 },
+          { header: 'Monto', width: 80, align: 'right' },
+        ],
+        rows: rows.map(({ type, r }) => {
+          const payment = r.status === 'PAID' ? resolvePaymentType(r) : null;
+          return [
+            CUSTOMER_TYPE_LABEL[type],
+            `${r.customer?.lastName ?? ''} ${r.customer?.firstName ?? ''}`.trim(),
+            r.status === 'PAID' ? 'Pagado' : 'Pendiente',
+            payment ? PAYMENT_TYPE_LABEL[payment] ?? payment : '-',
+            pdfArs(resolveAmount(r)),
+          ];
+        }),
+        totals: [
+          { label: 'Recibos', value: rows.length.toString() },
+          { label: 'Pagados', value: paid.toString() },
+          { label: 'Monto total', value: pdfArs(total) },
+        ],
+        emptyMessage: 'No hay recibos que coincidan con el filtro.',
+        filename: `recibos_${monthLabel.toLowerCase().replace(/\s+/g, '_')}.pdf`,
+        successMessage: 'PDF de recibos descargado',
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -98,7 +150,7 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
           <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'all' | 'PAID' | 'PENDING')}>
             <SelectTrigger aria-label="Estado" className="h-8 text-[12px]">
               <SelectValue />
@@ -122,6 +174,16 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
               ))}
             </SelectContent>
           </Select>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={downloadPdf}
+            disabled={totalShown === 0 || downloading}
+            className="col-span-2 h-8 gap-1.5 text-[12px] sm:col-span-1"
+          >
+            <FileDown className="size-3.5" />
+            {downloading ? 'Generando…' : 'Descargar PDF'}
+          </Button>
         </div>
 
         {totalShown === 0 ? (
