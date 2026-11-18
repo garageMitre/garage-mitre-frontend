@@ -59,7 +59,19 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
   const [open, setOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<'all' | 'PAID' | 'PENDING'>('all');
   const [paymentFilter, setPaymentFilter] = useState<string>('all');
+  const [typeFilter, setTypeFilter] = useState<'all' | CustomerType>('all');
   const [downloading, setDownloading] = useState(false);
+
+  // El medio de pago solo existe para un recibo pagado: elegir uno pasa el estado a "Pagado" y
+  // elegir "Pendiente" lo vuelve a "Todos".
+  const changeStatus = (value: 'all' | 'PAID' | 'PENDING') => {
+    setStatusFilter(value);
+    if (value === 'PENDING') setPaymentFilter('all');
+  };
+  const changePayment = (value: string) => {
+    setPaymentFilter(value);
+    if (value !== 'all') setStatusFilter('PAID');
+  };
   const { data: session } = useSession();
 
   const paidCount = receipts.filter((r) => r.status === 'PAID').length;
@@ -68,7 +80,10 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
   const grouped = useMemo(() => {
     const filtered = receipts.filter((r) => {
       if (statusFilter !== 'all' && r.status !== statusFilter) return false;
-      if (paymentFilter !== 'all' && resolvePaymentType(r) !== paymentFilter) return false;
+      if (typeFilter !== 'all' && r.customer?.customerType !== typeFilter) return false;
+      // Un pendiente puede tener pagos parciales con algún medio, pero todavía no está pago:
+      // no entra cuando se filtra por medio de pago.
+      if (paymentFilter !== 'all' && (r.status !== 'PAID' || resolvePaymentType(r) !== paymentFilter)) return false;
       return true;
     });
     const byType = new Map<CustomerType, Receipt[]>();
@@ -84,7 +99,7 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
       );
     }
     return CUSTOMER_TYPE_ORDER.filter((t) => byType.has(t)).map((t) => ({ type: t, rows: byType.get(t)! }));
-  }, [receipts, statusFilter, paymentFilter]);
+  }, [receipts, statusFilter, paymentFilter, typeFilter]);
 
   const totalShown = grouped.reduce((sum, g) => sum + g.rows.length, 0);
 
@@ -96,13 +111,14 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
     const total = rows.reduce((sum, { r }) => sum + resolveAmount(r), 0);
     const statusLabel = statusFilter === 'all' ? 'Todos los estados' : statusFilter === 'PAID' ? 'Pagados' : 'Pendientes';
     const paymentLabel = paymentFilter === 'all' ? 'Todos los medios de pago' : PAYMENT_TYPE_LABEL[paymentFilter] ?? paymentFilter;
+    const typeLabel = typeFilter === 'all' ? 'Todos los clientes' : CUSTOMER_TYPE_LABEL[typeFilter];
     setDownloading(true);
     try {
       await generateSimpleReport({
         kicker: 'MÉTRICAS DE CLIENTES',
         title: `Recibos de ${monthLabel}`,
         userName: session?.user?.email ?? '',
-        metaLine: `${statusLabel} · ${paymentLabel}`,
+        metaLine: `${typeLabel} · ${statusLabel} · ${paymentLabel}`,
         columns: [
           { header: 'Tipo', width: 85 },
           { header: 'Cliente', width: 150 },
@@ -150,8 +166,21 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]">
-          <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as 'all' | 'PAID' | 'PENDING')}>
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-[repeat(3,minmax(0,1fr))_auto]">
+          <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as 'all' | CustomerType)}>
+            <SelectTrigger aria-label="Tipo de cliente" className="h-8 text-[12px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los clientes</SelectItem>
+              {CUSTOMER_TYPE_ORDER.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {CUSTOMER_TYPE_LABEL[type]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={statusFilter} onValueChange={(v) => changeStatus(v as 'all' | 'PAID' | 'PENDING')}>
             <SelectTrigger aria-label="Estado" className="h-8 text-[12px]">
               <SelectValue />
             </SelectTrigger>
@@ -161,8 +190,12 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
               <SelectItem value="PENDING">Pendiente</SelectItem>
             </SelectContent>
           </Select>
-          <Select value={paymentFilter} onValueChange={setPaymentFilter}>
-            <SelectTrigger aria-label="Medio de pago" className="h-8 text-[12px]">
+          <Select value={paymentFilter} onValueChange={changePayment} disabled={statusFilter === 'PENDING'}>
+            <SelectTrigger
+              aria-label="Medio de pago"
+              title={statusFilter === 'PENDING' ? 'Los pendientes todavía no tienen medio de pago' : undefined}
+              className="h-8 text-[12px]"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -179,7 +212,7 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
             variant="outline"
             onClick={downloadPdf}
             disabled={totalShown === 0 || downloading}
-            className="col-span-2 h-8 gap-1.5 text-[12px] sm:col-span-1"
+            className="h-8 gap-1.5 text-[12px]"
           >
             <FileDown className="size-3.5" />
             {downloading ? 'Generando…' : 'Descargar PDF'}
