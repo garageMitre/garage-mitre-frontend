@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { ExternalLink, FileDown, ListFilter } from 'lucide-react';
 import { useSession } from 'next-auth/react';
+import dayjs from 'dayjs';
 import generateSimpleReport from '@/utils/generate-simple-report';
 import {
   Dialog,
@@ -48,6 +49,14 @@ function describePayment(receipt: Receipt): string | null {
   if (only && AUTO_COMPENSATION_TYPES.has(only)) return 'Cobro automático (pago de un tercero)';
   if (only) return `Pagó con ${PAYMENT_TYPE_LABEL[only] ?? only}`;
   return null;
+}
+
+// Fecha en que el recibo quedó pagado: la del recibo o, si no la tiene, la del último pago.
+function paidAt(receipt: Receipt): string | null {
+  if (receipt.status !== 'PAID') return null;
+  if (receipt.paymentDate) return receipt.paymentDate;
+  const dates = (receipt.payments ?? []).map((p) => p.paymentDate).filter((d): d is string => !!d);
+  return dates.sort((a, b) => dayjs(a).valueOf() - dayjs(b).valueOf()).at(-1) ?? null;
 }
 
 // Mientras está pendiente, "price" es el saldo que falta; el monto del recibo es "startAmount".
@@ -106,7 +115,15 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
   // PDF con lo mismo que muestra el diálogo: el mes, los filtros elegidos y los recibos en el
   // mismo orden (por tipo de cliente y apellido).
   const downloadPdf = async () => {
-    const rows = grouped.flatMap((g) => g.rows.map((r) => ({ type: g.type, r })));
+    // Primero los pagados, del que pagó primero al último; después los pendientes en el orden
+    // del diálogo (por tipo de cliente y apellido).
+    const listed = grouped.flatMap((g) => g.rows.map((r) => ({ type: g.type, r, paidAt: paidAt(r) })));
+    const rows = [
+      ...listed
+        .filter((row) => row.paidAt)
+        .sort((a, b) => dayjs(a.paidAt).valueOf() - dayjs(b.paidAt).valueOf()),
+      ...listed.filter((row) => !row.paidAt),
+    ];
     const paid = rows.filter(({ r }) => r.status === 'PAID').length;
     const total = rows.reduce((sum, { r }) => sum + resolveAmount(r), 0);
     const statusLabel = statusFilter === 'all' ? 'Todos los estados' : statusFilter === 'PAID' ? 'Pagados' : 'Pendientes';
@@ -120,19 +137,21 @@ export function ReceiptsDetailDialog({ receipts, monthLabel }: { receipts: Recei
         userName: session?.user?.email ?? '',
         metaLine: `${typeLabel} · ${statusLabel} · ${paymentLabel}`,
         columns: [
-          { header: 'Tipo', width: 85 },
-          { header: 'Cliente', width: 150 },
-          { header: 'Estado', width: 70, align: 'center' },
-          { header: 'Medio de pago', width: 95 },
-          { header: 'Monto', width: 80, align: 'right' },
+          { header: 'Tipo', width: 80 },
+          { header: 'Cliente', width: 140 },
+          { header: 'Estado', width: 66, align: 'center' },
+          { header: 'Medio de pago', width: 88 },
+          { header: 'Fecha de pago', width: 78, align: 'center' },
+          { header: 'Monto', width: 76, align: 'right' },
         ],
-        rows: rows.map(({ type, r }) => {
+        rows: rows.map(({ type, r, paidAt: date }) => {
           const payment = r.status === 'PAID' ? resolvePaymentType(r) : null;
           return [
             CUSTOMER_TYPE_LABEL[type],
             `${r.customer?.lastName ?? ''} ${r.customer?.firstName ?? ''}`.trim(),
             r.status === 'PAID' ? 'Pagado' : 'Pendiente',
             payment ? PAYMENT_TYPE_LABEL[payment] ?? payment : '-',
+            date ? dayjs(date).format('DD/MM/YYYY') : '-',
             pdfArs(resolveAmount(r)),
           ];
         }),
